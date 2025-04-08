@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-app",
+  "name": "@dropped-in/client",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,9 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@types/three": "^0.175.0",
     "nuxt": "^3.16.2",
+    "three": "^0.175.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
