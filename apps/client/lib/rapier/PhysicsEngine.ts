@@ -44,7 +44,20 @@ export class PhysicsEngine {
             return;
         }
 
+        // Convertir deltaTime en secondes si nécessaire (si fourni en millisecondes)
+        const timeStep = deltaTime > 1 ? deltaTime / 1000 : deltaTime;
+
+        // Mettre à jour la simulation physique avec un pas de temps fixe
         this.world.step();
+
+        // Log pour le débogage
+        if (Math.random() < 0.1) { // Log 10% du temps pour éviter de surcharger la console
+            const bodies = this.world.bodies;
+            console.log('Physics update:', {
+                timeStep,
+                numBodies: bodies.len()
+            });
+        }
     }
 
     /**

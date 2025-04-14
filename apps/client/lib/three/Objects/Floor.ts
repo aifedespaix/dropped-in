@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import * as RAPIER from '@dimforge/rapier3d-compat'
 import { PhysicsObject } from '../../rapier/PhysicsObject'
 import { PhysicsEngine } from '../../rapier/PhysicsEngine'
 

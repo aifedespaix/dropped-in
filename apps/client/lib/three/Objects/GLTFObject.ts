@@ -1,7 +1,6 @@
 import * as THREE from 'three'
 import { GLTFLoader, GLTFObjectType, type GLTFLoadOptions } from '../Utils/GLTFLoader'
 import { PhysicsObject } from '~/lib/rapier/PhysicsObject'
-import * as RAPIER from '@dimforge/rapier3d-compat'
 import { PhysicsEngine } from '~/lib/rapier/PhysicsEngine'
 
 /**
@@ -148,7 +147,10 @@ export abstract class GLTFObject {
      * Récupère la position de l'objet
      */
     public getPosition(): THREE.Vector3 {
-        return this.mesh.position
+        if (this.physicsObject) {
+            return this.physicsObject.getPosition()
+        }
+        return this.mesh.position.clone()
     }
 
     /**
@@ -165,11 +167,7 @@ export abstract class GLTFObject {
     public setPosition(position: THREE.Vector3): void {
         this.mesh.position.copy(position)
         if (this.physicsObject) {
-            const rigidBody = this.physicsObject.getRigidBody()
-            rigidBody.setTranslation(
-                new RAPIER.Vector3(position.x, position.y, position.z),
-                true
-            )
+            this.physicsObject.setPosition(position)
         }
     }
 
@@ -187,17 +185,7 @@ export abstract class GLTFObject {
     public setRotation(rotation: THREE.Euler): void {
         this.mesh.rotation.copy(rotation)
         if (this.physicsObject) {
-            const rigidBody = this.physicsObject.getRigidBody()
-            const quaternion = new THREE.Quaternion().setFromEuler(rotation)
-            rigidBody.setRotation(
-                new RAPIER.Quaternion(
-                    quaternion.x,
-                    quaternion.y,
-                    quaternion.z,
-                    quaternion.w
-                ),
-                true
-            )
+            this.physicsObject.setRotation(rotation)
         }
     }
 } 

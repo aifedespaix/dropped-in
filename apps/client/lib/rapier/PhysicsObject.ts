@@ -165,9 +165,38 @@ export class PhysicsObject {
         return this.mesh as THREE.Mesh;
     }
 
+    public getPosition(): THREE.Vector3 {
+        const position = this.rigidBody.translation();
+        return new THREE.Vector3(position.x, position.y, position.z);
+    }
+
+    public setPosition(position: THREE.Vector3): void {
+        this.rigidBody.setTranslation(
+            new RAPIER.Vector3(position.x, position.y, position.z),
+            true
+        );
+    }
+
+    public setRotation(rotation: THREE.Euler): void {
+        const quaternion = new THREE.Quaternion().setFromEuler(rotation);
+        this.rigidBody.setRotation(
+            new RAPIER.Quaternion(
+                quaternion.x,
+                quaternion.y,
+                quaternion.z,
+                quaternion.w
+            ),
+            true
+        );
+    }
+
     public dispose() {
         if (this.rigidBody) {
             this.physicsEngine.getWorld().removeRigidBody(this.rigidBody);
         }
+    }
+
+    public move(direction: THREE.Vector3, horizontalRotation: number): void {
+        // Méthode de base à surcharger dans les classes enfants
     }
 } 

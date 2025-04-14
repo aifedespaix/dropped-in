@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
 import { SceneManager } from '~/lib/three/Scenes/SceneManager'
 import { InputManager } from '~/lib/three/Input/InputManager'
 
 export const useGameStore = defineStore('game', () => {
-    const sceneManager = ref<SceneManager | null>(null)
+    const sceneManager = shallowRef<SceneManager | null>(null)
     const container = ref<HTMLElement | null>(null)
     const _isPlaying = ref(false)
-    const inputManager = ref<InputManager | null>(null)
+    const inputManager = shallowRef<InputManager | null>(null)
 
     const isPlaying = computed(() => _isPlaying.value)
 
@@ -50,7 +50,7 @@ export const useGameStore = defineStore('game', () => {
             await container.value.requestPointerLock()
             return true
         } catch (error) {
-            console.warn('Pointer Lock error:', error)
+            console.warn('Pointer lock error:', error)
             return false
         }
     }
@@ -70,29 +70,48 @@ export const useGameStore = defineStore('game', () => {
     const play = async () => {
         if (!sceneManager.value || !container.value) return
 
-        // D'abord demander le fullscreen
-        const fullscreenSuccess = await requestFullscreen()
-        if (!fullscreenSuccess) return
+        try {
+            // D'abord demander le fullscreen
+            const fullscreenSuccess = await requestFullscreen()
+            if (!fullscreenSuccess) {
+                console.warn('Failed to enter fullscreen mode')
+                return
+            }
 
-        // Puis demander le pointer lock
-        const pointerLockSuccess = await requestPointerLock()
-        if (!pointerLockSuccess) {
-            // Si le pointer lock échoue, on sort du fullscreen
+            // Attendre un peu que le fullscreen soit bien appliqué
+            await new Promise(resolve => setTimeout(resolve, 100))
+
+            // Puis demander le pointer lock
+            const pointerLockSuccess = await requestPointerLock()
+            if (!pointerLockSuccess) {
+                console.warn('Failed to lock pointer')
+                // Si le pointer lock échoue, on sort du fullscreen
+                pause()
+                return
+            }
+
+            _isPlaying.value = true
+            console.log('Game started in fullscreen with pointer lock')
+        } catch (error) {
+            console.error('Error starting game:', error)
             pause()
-            return
         }
-
-        _isPlaying.value = true
     }
 
     const pause = () => {
-        if (document.fullscreenElement) {
-            document.exitFullscreen()
-        }
+        _isPlaying.value = false
+
+        // Sortir du pointer lock
         if (document.pointerLockElement) {
             document.exitPointerLock()
         }
-        _isPlaying.value = false
+
+        // Sortir du fullscreen
+        if (document.fullscreenElement) {
+            document.exitFullscreen()
+        }
+
+        console.log('Game paused, exited fullscreen and pointer lock')
     }
 
     const destroy = () => {

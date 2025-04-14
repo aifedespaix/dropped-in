@@ -29,6 +29,25 @@ export class MainCamera {
         this.camera.quaternion.setFromRotationMatrix(rotationMatrix)
     }
 
+    public setRotation(horizontalRotation: number, verticalRotation: number) {
+        // Créer les quaternions de rotation
+        const horizontalQuaternion = new THREE.Quaternion()
+        horizontalQuaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), horizontalRotation)
+
+        const verticalQuaternion = new THREE.Quaternion()
+        verticalQuaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), verticalRotation)
+
+        // Combiner les rotations (d'abord horizontale, puis verticale)
+        this.camera.quaternion.multiplyQuaternions(horizontalQuaternion, verticalQuaternion)
+
+        // Forcer la mise à jour des matrices
+        this.camera.updateMatrix()
+        this.camera.updateMatrixWorld(true)
+
+        // Forcer la mise à jour de la matrice de vue
+        this.camera.matrixWorldInverse.copy(this.camera.matrixWorld).invert()
+    }
+
     public resize() {
         this.camera.aspect = this.container.clientWidth / this.container.clientHeight
         this.camera.updateProjectionMatrix()

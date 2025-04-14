@@ -2,7 +2,6 @@ import * as THREE from 'three'
 import { GLTFObject } from './GLTFObject'
 import { GLTFObjectType } from '../Utils/GLTFLoader'
 import type { GLTFLoadOptions } from '../Utils/GLTFLoader'
-import * as RAPIER from '@dimforge/rapier3d-compat'
 
 /**
  * Type d'interaction possible avec un objet
@@ -167,11 +166,7 @@ export class InteractiveObject extends GLTFObject {
 
         this.mesh.position.copy(position)
         if (this.physicsObject) {
-            const rigidBody = this.physicsObject.getRigidBody()
-            rigidBody.setTranslation(
-                new RAPIER.Vector3(position.x, position.y, position.z),
-                true
-            )
+            this.physicsObject.setPosition(position)
         }
     }
 
@@ -183,15 +178,7 @@ export class InteractiveObject extends GLTFObject {
 
         this.mesh.position.copy(this.originalPosition)
         if (this.physicsObject) {
-            const rigidBody = this.physicsObject.getRigidBody()
-            rigidBody.setTranslation(
-                new RAPIER.Vector3(
-                    this.originalPosition.x,
-                    this.originalPosition.y,
-                    this.originalPosition.z
-                ),
-                true
-            )
+            this.physicsObject.setPosition(this.originalPosition)
         }
     }
 
@@ -206,29 +193,8 @@ export class InteractiveObject extends GLTFObject {
         this.isPickedUp = false
 
         if (this.physicsObject) {
-            const rigidBody = this.physicsObject.getRigidBody()
-            rigidBody.setTranslation(
-                new RAPIER.Vector3(
-                    this.originalPosition.x,
-                    this.originalPosition.y,
-                    this.originalPosition.z
-                ),
-                true
-            )
-
-            // Convertir la rotation Euler en quaternion
-            const quaternion = new THREE.Quaternion()
-            quaternion.setFromEuler(this.originalRotation)
-
-            rigidBody.setRotation(
-                new RAPIER.Quaternion(
-                    quaternion.x,
-                    quaternion.y,
-                    quaternion.z,
-                    quaternion.w
-                ),
-                true
-            )
+            this.physicsObject.setPosition(this.originalPosition)
+            this.physicsObject.setRotation(this.originalRotation)
         }
     }
 

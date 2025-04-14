@@ -1,6 +1,7 @@
 <template>
     <!-- Conteneur Three.js -->
     <div ref="gameContainer" class="fixed inset-0 w-full h-full overflow-x-hidden">
+        <!-- Menu principal -->
         <div v-if="!gameStore.isPlaying"
             class="fixed inset-0 w-full h-full flex justify-center items-center z-1000 overflow-x-hidden" bg="black/80">
             <div class="p-8 rounded-lg text-center w-120 max-w-[90vw] h-[80vh] flex flex-col overflow-x-hidden"
@@ -9,7 +10,7 @@
                 <div class="flex flex-col gap-2 flex-1 overflow-y-auto w-full overflow-x-hidden tiny-scrollbar">
                     <div v-if="!currentMenu">
                         <div class="flex flex-col gap-2">
-                            <SettingsButton text="Jouer" variant="primary" @click="gameStore.play()" />
+                            <SettingsButton text="Jouer" variant="primary" @click="startGame" />
                             <SettingsButton text="Options" variant="secondary" @click="currentMenu = menus.options" />
                             <!-- <SettingsButton text="Quitter" variant="danger" @click="gameStore.quit()" /> -->
                         </div>
@@ -44,6 +45,10 @@ const menus = {
     options: OverlayShortcuts
 }
 
+const startGame = async () => {
+    // D'abord cacher le menu
+    await gameStore.play()
+}
 
 // Surveiller les changements d'état du jeu
 watch(() => gameStore.isPlaying, (isPlaying) => {
