@@ -1,59 +1,70 @@
 <template>
-    <div class="shortcuts-container">
-        <h2 class="grid-col-span-2">Raccourcis</h2>
-        <div class="shortcuts-grid">
-            <div class="shortcut-category">
-                <h3>Mouvement</h3>
-                <div v-for="[action, keys] in keyboardShortcuts" :key="action" class="shortcut-item">
+    <div class="bg-dark-800 p-8 rounded-lg text-white w-full relative">
+        <h2 class="text-center mb-8 text-white col-span-2">Raccourcis</h2>
+        <div class="gap-8">
+            <div class="bg-dark-700 p-6 rounded-md">
+                <h3 class="mb-4 text-white border-b border-dark-500 pb-2">Mouvement</h3>
+                <div v-for="[action, keys] in keyboardShortcuts" :key="action"
+                    class="flex justify-between items-center mb-3 p-2 bg-dark-700 rounded">
                     <span>{{ getActionLabel(action) }}</span>
-                    <div class="shortcut-actions">
-                        <div class="keys-container">
-                            <div v-for="key in keys" :key="key" class="key-wrapper">
-                                <kbd>{{ key }}</kbd>
-                                <button @click="unmapKey(key, action)" class="unmap-button" :disabled="isMapping">
-                                    ×
-                                </button>
+                    <div class="flex gap-2 items-center">
+                        <div class="flex gap-2 items-center">
+                            <div v-for="key in keys" :key="key" class="flex items-center">
+                                <div class="relative group">
+                                    <kbd class="bg-dark-800 px-2 py-1 rounded font-mono text-sm text-white pr-6">
+                                        {{ key }}</kbd>
+                                    <button @click="unmapKey(key, action)"
+                                        class="cursor-pointer bg-transparent rounded-full border-none absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-xs text-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        :disabled="isMapping">
+                                        ×
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <button @click="startMapping(action)" class="add-button" :disabled="isMapping">
+                        <button @click="startMapping(action)"
+                            class="p-1 rounded border-none cursor-pointer text-xs transition-colors flex items-center justify-center min-w-6 h-6 bg-dark-500 text-white hover:bg-dark-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                            :disabled="isMapping">
                             +
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div class="shortcut-category">
-                <h3>Caméra</h3>
-                <div class="shortcut-item">
+            <div class="bg-dark-700 p-6 rounded-md">
+                <h3 class="mb-4 text-white border-b border-dark-500 pb-2">Caméra</h3>
+                <div class="flex justify-between items-center mb-3 p-2 bg-dark-600 rounded">
                     <span>Rotation</span>
-                    <kbd>Souris</kbd>
+                    <kbd class="bg-dark-500 px-2 py-1 rounded font-mono text-sm text-white">Souris</kbd>
                 </div>
-                <div class="shortcut-item">
+                <div class="flex justify-between items-center mb-3 p-2 bg-dark-600 rounded">
                     <span>Zoom +</span>
-                    <kbd>Molette</kbd>
+                    <kbd class="bg-dark-500 px-2 py-1 rounded font-mono text-sm text-white">Molette</kbd>
                 </div>
-                <div class="shortcut-item">
+                <div class="flex justify-between items-center mb-3 p-2 bg-dark-600 rounded">
                     <span>Zoom -</span>
-                    <kbd>Molette</kbd>
+                    <kbd class="bg-dark-500 px-2 py-1 rounded font-mono text-sm text-white">Molette</kbd>
                 </div>
             </div>
 
-            <div class="shortcut-category">
-                <h3>Interface</h3>
-                <div class="shortcut-item">
+            <div class="bg-dark-700 p-6 rounded-md">
+                <h3 class="mb-4 text-white border-b border-dark-500 pb-2">Interface</h3>
+                <div class="flex justify-between items-center mb-3 p-2 bg-dark-600 rounded">
                     <span>Plein écran</span>
-                    <kbd>F11</kbd>
+                    <kbd class="bg-dark-500 px-2 py-1 rounded font-mono text-sm text-white">F11</kbd>
                 </div>
-                <div class="shortcut-item">
+                <div class="flex justify-between items-center mb-3 p-2 bg-dark-600 rounded">
                     <span>Menu raccourcis</span>
-                    <kbd>Échap</kbd>
+                    <kbd class="bg-dark-500 px-2 py-1 rounded font-mono text-sm text-white">Échap</kbd>
                 </div>
             </div>
         </div>
 
-        <div v-if="isMapping && mappingAction" class="mapping-overlay">
+        <div v-if="isMapping && mappingAction"
+            class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/90 p-8 rounded-lg text-center z-1000 flex flex-col gap-4">
             Appuyez sur une touche pour mapper l'action "{{ getActionLabel(mappingAction) }}"
-            <button @click="stopMapping" class="cancel-button">Annuler</button>
+            <button @click="stopMapping" class="bg-red-800 text-white px-4 py-2 self-center hover:bg-red-700">
+                Annuler
+            </button>
         </div>
     </div>
 </template>
@@ -85,6 +96,17 @@ const startMapping = (action: CharacterAction) => {
     if (!gameStore.inputManager) return
     mappingAction.value = action
     gameStore.inputManager.startKeyMapping((key) => {
+        // Vérifier si la touche est déjà utilisée pour cette action
+        const existingKeys = gameStore.inputManager?.getActionKeys(action) || []
+        const formattedKey = key.replace(/^Key/, '').replace(/^Space$/, 'Espace')
+
+        if (existingKeys.some(existingKey => {
+            const formattedExistingKey = existingKey.replace(/^Key/, '').replace(/^Space$/, 'Espace')
+            return formattedExistingKey === formattedKey
+        })) {
+            return // Ne pas ajouter la touche si elle existe déjà
+        }
+
         gameStore.inputManager?.mapKey(key, action)
     })
 }
@@ -112,146 +134,3 @@ const unmapKey = (displayKey: string, action: CharacterAction) => {
     }
 }
 </script>
-
-<style scoped>
-.shortcuts-container {
-    background-color: #1a1a1a;
-    padding: 2rem;
-    border-radius: 8px;
-    color: white;
-    max-width: 800px;
-    width: 90%;
-    display: grid;
-    position: relative;
-}
-
-h2 {
-    text-align: center;
-    margin-bottom: 2rem;
-    color: #fff;
-}
-
-.shortcuts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-}
-
-.shortcut-category {
-    background-color: #2a2a2a;
-    padding: 1.5rem;
-    border-radius: 6px;
-}
-
-h3 {
-    margin-bottom: 1rem;
-    color: #fff;
-    border-bottom: 1px solid #444;
-    padding-bottom: 0.5rem;
-}
-
-.shortcut-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-    padding: 0.5rem;
-    background-color: #333;
-    border-radius: 4px;
-}
-
-.shortcut-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.keys-container {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.key-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-kbd {
-    background-color: #444;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9em;
-    color: #fff;
-}
-
-button {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    font-size: 0.8em;
-    transition: background-color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 24px;
-    height: 24px;
-}
-
-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.add-button {
-    background-color: #4a4a4a;
-    color: white;
-    font-size: 1.2em;
-    font-weight: bold;
-}
-
-.add-button:hover:not(:disabled) {
-    background-color: #5a5a5a;
-}
-
-.unmap-button {
-    background-color: #4a2a2a;
-    color: white;
-    font-size: 1.2em;
-    font-weight: bold;
-    padding: 0;
-}
-
-.unmap-button:hover:not(:disabled) {
-    background-color: #5a3a3a;
-}
-
-.mapping-overlay {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.9);
-    padding: 2rem;
-    border-radius: 8px;
-    text-align: center;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.cancel-button {
-    background-color: #4a2a2a;
-    color: white;
-    padding: 0.5rem 1rem;
-    align-self: center;
-}
-
-.cancel-button:hover {
-    background-color: #5a3a3a;
-}
-</style>

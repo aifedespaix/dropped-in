@@ -7,7 +7,6 @@ export function useMainScene() {
     const initScene = (container: HTMLElement) => {
         if (!mainScene.value) {
             mainScene.value = new MainScene(container)
-            mainScene.value.init()
             mainScene.value.animate()
         }
         return mainScene.value

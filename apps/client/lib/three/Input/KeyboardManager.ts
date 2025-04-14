@@ -42,6 +42,7 @@ export class KeyboardManager {
             this.setupDefaultEvents()
         }
         this.setupKeyListeners()
+        console.log('KeyboardManager initialized with events:', this.events)
     }
 
     /**
@@ -67,6 +68,7 @@ export class KeyboardManager {
             throw new Error(`La touche "${key}" est déjà enregistrée`)
         }
         this.events.set(key, action)
+        console.log(`Added event: ${key} -> ${action}`)
     }
 
     /**
@@ -75,6 +77,7 @@ export class KeyboardManager {
      */
     public removeEvent(key: KeyCode): void {
         this.events.delete(key)
+        console.log(`Removed event: ${key}`)
     }
 
     /**
@@ -84,6 +87,7 @@ export class KeyboardManager {
     private setupKeyListeners(): void {
         window.addEventListener('keydown', this.handleKeyDown)
         window.addEventListener('keyup', this.handleKeyUp)
+        console.log('Keyboard listeners setup complete')
     }
 
     /**
@@ -94,6 +98,7 @@ export class KeyboardManager {
         if (this.isDestroyed) return
 
         const action = this.events.get(event.code)
+        console.log('KeyDown:', event.code, '->', action)
         if (action) {
             this.callback(action, 'start')
         }
@@ -107,6 +112,7 @@ export class KeyboardManager {
         if (this.isDestroyed) return
 
         const action = this.events.get(event.code)
+        console.log('KeyUp:', event.code, '->', action)
         if (action) {
             this.callback(action, 'stop')
         }
@@ -122,6 +128,7 @@ export class KeyboardManager {
         window.removeEventListener('keyup', this.handleKeyUp)
         this.events.clear()
         this.isDestroyed = true
+        console.log('KeyboardManager destroyed')
     }
 
     /**

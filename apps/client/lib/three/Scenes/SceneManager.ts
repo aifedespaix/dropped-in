@@ -9,12 +9,19 @@ export class SceneManager {
         this.mainScene = new MainScene(this.container)
     }
 
-    start() {
-        this.mainScene.init()
-        this.mainScene.animate()
+    async start() {
+        try {
+            console.log('Starting scene manager initialization...')
+            await this.mainScene.init()
+            console.log('Scene manager initialized successfully')
+            this.mainScene.animate()
+        } catch (error) {
+            console.error('Failed to initialize scene manager:', error)
+            throw error
+        }
     }
 
     destroy() {
-        // Nettoyage si nécessaire
+        this.mainScene.cleanup()
     }
 }

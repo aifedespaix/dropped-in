@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="w-full h-full font-default">
+  <div id="app" class="min-h-screen w-screen overflow-hidden font-default">
     <ThreeCanvas />
   </div>
 </template>

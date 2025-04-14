@@ -41,6 +41,7 @@ export class InputManager {
         this.keyboardManager = new KeyboardManager(this.handleInput.bind(this))
         this.mouseManager = new MouseManager(this.handleInput.bind(this))
         this.syncDefaultKeys()
+        console.log('InputManager initialized')
     }
 
     private syncDefaultKeys(): void {
@@ -57,6 +58,7 @@ export class InputManager {
             }
             this.actionKeys.get(action)?.add(key)
         })
+        console.log('Default keys synced:', this.actionKeys)
     }
 
     private addKey(key: KeyCode, action: CharacterAction): void {
@@ -94,6 +96,7 @@ export class InputManager {
             throw new Error(`L'action "${characterAction}" est déjà enregistrée`)
         }
         this.actions.set(characterAction, { callback, type: actionType, isActive: false })
+        console.log(`Registered keyboard event: ${characterAction} (${actionType})`)
     }
 
     /**
@@ -108,6 +111,7 @@ export class InputManager {
             throw new Error(`L'action "${characterAction}" est déjà enregistrée`)
         }
         this.actions.set(characterAction, { callback, type: actionType, isActive: false })
+        console.log(`Registered mouse event: ${characterAction} (${actionType})`)
     }
 
     /**
@@ -116,6 +120,7 @@ export class InputManager {
      */
     public unregisterEvent(characterAction: CharacterAction): void {
         this.actions.delete(characterAction)
+        console.log(`Unregistered event: ${characterAction}`)
     }
 
     /**
@@ -132,6 +137,7 @@ export class InputManager {
      */
     private handleInput(characterAction: CharacterAction, eventType: EventType): void {
         const action = this.actions.get(characterAction)
+        console.log(`Handling input: ${characterAction} (${eventType})`, action)
         if (!action) {
             console.warn(`Action "${characterAction}" non trouvée`)
             return
@@ -155,6 +161,7 @@ export class InputManager {
         this.keyboardManager.destroy()
         this.mouseManager.destroy()
         this.actions.clear()
+        console.log('InputManager destroyed')
     }
 
     /**

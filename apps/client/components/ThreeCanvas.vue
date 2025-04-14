@@ -1,5 +1,5 @@
 <template>
-    <div ref="container" class="w-100dvw h-100dvh">
+    <div ref="container" class="fixed inset-0 w-full h-full">
         <GameOverlay />
     </div>
 </template>

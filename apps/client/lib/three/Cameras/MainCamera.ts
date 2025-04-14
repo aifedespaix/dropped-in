@@ -37,4 +37,8 @@ export class MainCamera {
     public getCamera(): THREE.PerspectiveCamera {
         return this.camera
     }
+
+    public getPosition(): THREE.Vector3 {
+        return this.camera.position.clone()
+    }
 } 
