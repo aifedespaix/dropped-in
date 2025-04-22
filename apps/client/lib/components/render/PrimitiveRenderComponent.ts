@@ -1,55 +1,53 @@
 import * as THREE from 'three';
 import { _RenderComponent } from './_RenderComponent';
-import { TransformComponent } from '../transform/TransformComponent';
-import { ThreeRenderService } from '../../services/ThreeRenderService';
+import type { ServiceLocator } from '../../services/ServiceLocator';
 
 export type PrimitiveRenderComponentOptions = {
-    width?: number;
-    height?: number;
-    depth?: number;
-    color?: THREE.Color;
+    type: 'box' | 'sphere';
+    width: number;
+    height: number;
+    depth: number;
+    color: THREE.Color;
 }
 
 export class PrimitiveRenderComponent extends _RenderComponent {
-    private mesh: THREE.Mesh;
 
-    constructor(renderService: ThreeRenderService,
-        type: 'box' | 'sphere' = 'box',
-        { width = 1, height = 1, depth = 1, color = new THREE.Color(0x44aa88) }: PrimitiveRenderComponentOptions = {}
-    ) {
-        super(renderService);
+    constructor(serviceLocator: ServiceLocator, params: Partial<PrimitiveRenderComponentOptions>) {
+        super(serviceLocator);
+        params = {
+            type: 'box',
+            width: 1,
+            height: 1,
+            depth: 1,
+            color: new THREE.Color(0x44aa88),
+            ...params,
+        }
 
         let geometry: THREE.BufferGeometry;
-        switch (type) {
+        switch (params.type) {
             case 'sphere':
                 geometry = new THREE.SphereGeometry(1, 32, 32);
                 break;
             case 'box':
             default:
-                geometry = new THREE.BoxGeometry(width, height, depth);
+                geometry = new THREE.BoxGeometry(params.width, params.height, params.depth);
                 break;
         }
 
-        const material = new THREE.MeshStandardMaterial({ color });
-        this.mesh = new THREE.Mesh(geometry, material);
-        renderService.scene.add(this.mesh);
+        const material = new THREE.MeshStandardMaterial({ color: params.color });
+        this.model = new THREE.Mesh(geometry, material);
+        this.serviceLocator.get('render').scene.add(this.model);
     }
 
     getObject3D(): THREE.Object3D {
-        return this.mesh;
+        return this.model;
     }
 
     getSize(): THREE.Vector3 {
-        const bbox = new THREE.Box3().setFromObject(this.mesh);
+        const boundingBox = new THREE.Box3().setFromObject(this.model);
         const size = new THREE.Vector3();
-        bbox.getSize(size);
+        boundingBox.getSize(size);
         return size;
     }
 
-    render(): void {
-        const transform = this.entity!.getComponent(TransformComponent);
-        this.mesh.position.set(transform.position.x, transform.position.y, transform.position.z);
-        this.mesh.rotation.set(transform.rotation.x, transform.rotation.y, transform.rotation.z);
-        this.mesh.scale.set(transform.scale.x, transform.scale.y, transform.scale.z);
-    }
 }

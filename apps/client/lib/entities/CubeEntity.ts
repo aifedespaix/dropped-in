@@ -1,28 +1,28 @@
 import { _RenderComponent } from "../components/render/_RenderComponent";
 import { _Entity } from "./_Entity";
-import { ThreeRenderService } from "../services/ThreeRenderService";
 import { TransformComponent } from "../components/transform/TransformComponent";
 import { RotatorComponent } from "../components/animations/RotatorComponent";
 import { PrimitiveRenderComponent } from "../components/render/PrimitiveRenderComponent";
-
+import { RapierPhysicsComponent } from "../components/physics/RapierPhysicsComponent";
+import { PhysicRotationComponent } from "../components/physics/PhysicRotationComponent";
+import { HitboxSquareComponent } from "../components/hitbox/HitBoxSquareComponent";
+import { HitboxHelperComponent } from "../components/helpers/HitboxHelperComponent";
 export class CubeEntity extends _Entity {
-    private renderService: ThreeRenderService;
-
-    constructor(renderService: ThreeRenderService) {
-        super();
-        this.renderService = renderService;
-    }
 
     async init(): Promise<void> {
-        const promises: Promise<void>[] = [];
-        promises.push(this.addComponent(new PrimitiveRenderComponent(this.renderService, 'box')));
-        promises.push(this.addComponent(new TransformComponent()));
-        promises.push(this.addComponent(new RotatorComponent()));
+        this.addComponent(new PrimitiveRenderComponent(this.serviceLocator, { type: 'box' }));
+        this.addComponent(new TransformComponent(this.serviceLocator));
+        this.addComponent(new RotatorComponent(this.serviceLocator));
+        this.addComponent(new RapierPhysicsComponent(this.serviceLocator));
+        this.addComponent(new HitboxSquareComponent(this.serviceLocator));
+        this.addComponent(new HitboxHelperComponent(this.serviceLocator));
+        this.addComponent(new PhysicRotationComponent(this.serviceLocator));
 
-        await Promise.all(promises);
+        await this.initAllComponents();
+        this.startAllComponents();
     }
 
-    getName(): string {
+    get name(): string {
         return "Cube";
     }
 }

@@ -6,13 +6,13 @@ import { ActionManager } from '../core/ActionManager';
 import { _Entity } from '../entities/_Entity';
 import { ThreeRenderService } from '../services/ThreeRenderService';
 import { RapierPhysicsService } from '../services/RapierPhysicsService';
+import { ServiceLocator } from '../services/ServiceLocator';
 
 export class GameEngine {
     private sceneManager!: SceneManager;
     private inputManager: InputManager;
     private actionManager: ActionManager;
-    private physicsService: RapierPhysicsService;
-    private renderService: ThreeRenderService;
+    private serviceLocator: ServiceLocator;
     // private networkManager: NetworkManager;
     // private aiController: AIController;
 
@@ -24,20 +24,28 @@ export class GameEngine {
     constructor(target: HTMLElement) {
         this.target = target;
 
-        this.physicsService = new RapierPhysicsService();
-        this.renderService = new ThreeRenderService(this.target);
+        this.serviceLocator = new ServiceLocator();
+
         this.inputManager = InputManager.getInstance();
         this.actionManager = ActionManager.getInstance();
         // this.networkManager = new NetworkManager();
         // this.aiController = new AIController();
     }
 
+    private registerServices(): void {
+        this.serviceLocator.register('render', new ThreeRenderService(this.target));
+        this.serviceLocator.register('physics', new RapierPhysicsService());
+    }
+
     public async init(): Promise<void> {
         console.log("[GameEngine] Initializing...");
-        await this.physicsService.init();
+        this.registerServices();
 
-        this.sceneManager = new SceneManager(this.renderService);
-        await this.sceneManager.loadInitialScene(this.physicsService);
+        const physicsService = this.serviceLocator.get('physics');
+        await physicsService.init();
+
+        this.sceneManager = new SceneManager(this.serviceLocator);
+        await this.sceneManager.loadInitialScene();
 
         this.entities = this.sceneManager.getEntities();
         this.inputManager.init();
@@ -63,7 +71,9 @@ export class GameEngine {
 
 
     private update(dt: number): void {
-        this.physicsService.step();
+        const physicsService = this.serviceLocator.get('physics');
+        physicsService.step();
+
         this.inputManager.update(dt);
         // this.networkManager.update(dt);
         // this.aiController.update(dt);

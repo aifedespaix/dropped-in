@@ -1,5 +1,9 @@
 import type { _Entity } from '../entities/_Entity';
 import type { ActionChannel } from '../types/ActionChannel';
+
+/**
+ * Une action est un objet qui exécute une logique d'animation.
+ */
 export abstract class _Action {
     protected entity!: _Entity;
     protected startedAt: number = 0;

@@ -1,19 +1,17 @@
 import { _RenderComponent } from './_RenderComponent';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import type { ThreeRenderService } from '../../services/ThreeRenderService';
-import { TransformComponent } from '../transform/TransformComponent';
+import type { ServiceLocator } from '../../services/ServiceLocator';
 
 export class GlbRenderComponent extends _RenderComponent {
     private loader = new GLTFLoader();
     private path: string;
-    public model!: THREE.Group;
     private isLoaded = false;
 
     private onReadyCallbacks: (() => void)[] = [];
 
-    constructor(renderService: ThreeRenderService, path: string) {
-        super(renderService);
+    constructor(serviceLocator: ServiceLocator, path: string) {
+        super(serviceLocator);
         this.path = path;
     }
 
@@ -21,20 +19,32 @@ export class GlbRenderComponent extends _RenderComponent {
         await this.load();
     }
 
-    getObject3D(): THREE.Object3D | null {
+    getObject3D(): THREE.Object3D {
+        console.log(this.model);
         return this.model;
     }
 
-    private load(): void {
-        this.loader.load(this.path, (gltf) => {
-            this.model = gltf.scene;
-            this.isLoaded = true;
+    private async load(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.loader.load(
+                this.path,
+                (gltf) => {
+                    this.model = gltf.scene;
+                    this.isLoaded = true;
 
-            this.renderService.scene.add(this.model);
+                    this.serviceLocator.get('render').scene.add(this.model);
 
-            // ✅ Exécuter tous les callbacks à la fin du chargement
-            this.onReadyCallbacks.forEach(cb => cb());
-            this.onReadyCallbacks = []; // facultatif : on les vide
+                    this.onReadyCallbacks.forEach(cb => cb());
+                    this.onReadyCallbacks = [];
+
+                    resolve(); // ✅ chargement terminé
+                },
+                undefined,
+                (error) => {
+                    console.error("[GlbRenderComponent] Failed to load:", this.path, error);
+                    reject(error); // ❌ erreur de chargement
+                }
+            );
         });
     }
 
@@ -49,19 +59,4 @@ export class GlbRenderComponent extends _RenderComponent {
         }
     }
 
-    getSize(): THREE.Vector3 {
-        const box = new THREE.Box3().setFromObject(this.model);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        return size;
-    }
-
-    override render(): void {
-        const transform = this.entity?.getComponent?.(TransformComponent);
-        if (!transform || !this.model) return;
-
-        this.model.position.copy(transform.position);
-        this.model.rotation.copy(new THREE.Euler(transform.rotation.x, transform.rotation.y, transform.rotation.z));
-        this.model.scale.copy(transform.scale);
-    }
 }

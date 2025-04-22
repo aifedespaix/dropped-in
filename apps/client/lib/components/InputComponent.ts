@@ -26,7 +26,6 @@ export class InputComponent extends _Component {
         for (const key in this.inputActionMap) {
             const actionKey = key as InputInstantAction;
             if (input.isPressed(actionKey)) {
-                console.log("[WWWWWWWWWWW] Triggered action:", actionKey);
                 const action = this.inputActionMap[actionKey]();
                 actionManager.perform(this.entity!, action);
             }

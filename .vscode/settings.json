@@ -1,8 +1,20 @@
 {
     "cSpell.words": [
+        "angvel",
+        "Angvel",
         "Désenregistrer",
         "dimforge",
+        "esnext",
+        "euler",
+        "gltf",
         "GLTF",
-        "nuxt"
+        "hitbox",
+        "Hitbox",
+        "lerp",
+        "linvel",
+        "nuxt",
+        "renderable",
+        "Renderable",
+        "unocss"
     ]
 }

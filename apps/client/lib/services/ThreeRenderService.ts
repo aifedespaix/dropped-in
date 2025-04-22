@@ -11,7 +11,7 @@ export class ThreeRenderService {
 
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-        this.camera.position.set(0, 2, 5);
+        this.camera.position.set(0, 1.8, 4);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(width, height);

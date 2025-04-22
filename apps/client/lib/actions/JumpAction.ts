@@ -5,28 +5,17 @@ import type { ActionChannel } from '../types/ActionChannel';
 
 export class JumpAction extends _Action {
     private jumped = false;
+    private force = 5;
 
     override start(entity: _Entity): void {
         this.entity = entity;
-        const physics = entity.tryGetComponent(RapierPhysicsComponent);
-        if (!physics) {
-            console.warn("[JumpAction] No physics component found");
-            return;
-        }
+        const physics = entity.getComponent(RapierPhysicsComponent);
 
         if (!physics.isGrounded()) {
-            console.log("[JumpAction] Not grounded, cannot jump");
             return;
         }
 
-        const beforeVel = physics.getVelocity();
-        console.log("[JumpAction] Before jump - Velocity:", { x: beforeVel.x, y: beforeVel.y, z: beforeVel.z });
-
-        // Augmenter la force de l'impulsion
-        physics.applyImpulse({ y: 10 });
-
-        const afterVel = physics.getVelocity();
-        console.log("[JumpAction] After jump - Velocity:", { x: afterVel.x, y: afterVel.y, z: afterVel.z });
+        physics.applyImpulse({ y: this.force });
 
         this.jumped = true;
         this.startedAt = performance.now();

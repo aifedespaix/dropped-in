@@ -4,9 +4,9 @@ import { Vector3, Vector2 } from 'three';
 
 export class MovementControllerComponent extends _Component {
     private direction = new Vector3();
-    private speed = 5;
+    private speed = 15;
     private _friction = 0.5;
-    private _acceleration = 10;
+    private _acceleration = 50;
 
     setDirection(dir: Vector3) {
         this.direction.copy(dir);

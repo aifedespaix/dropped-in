@@ -1,68 +1,88 @@
 import { _Component } from '../_Component';
 import * as RAPIER from '@dimforge/rapier3d-compat';
-import { RapierPhysicsService } from '../../services/RapierPhysicsService';
-import { TransformComponent } from '../transform/TransformComponent';
-import { BoundingBoxComponent } from '../BoundingBoxComponent';
+import type { ServiceLocator } from '~/lib/services/ServiceLocator';
+import { _HitboxComponent } from '../hitbox/_HitboxComponent';
+import { _RenderComponent } from '../render/_RenderComponent';
+
+type RapierPhysicsComponentType = 'dynamic' | 'static' | 'kinematic';
+
+export type RapierPhysicsComponentOptions = {
+    dynamic: boolean;
+    position: RAPIER.Vector3;
+    rotation: RAPIER.Rotation;
+    size: { x: number; y: number; z: number };
+    friction: number;
+    type: RapierPhysicsComponentType;
+    isCcdEnabled?: boolean; // Continuous Collision Detection
+};
 
 export class RapierPhysicsComponent extends _Component {
     body!: RAPIER.RigidBody;
     collider!: RAPIER.Collider;
-    private position = { x: 0, y: 0, z: 0 };
-    private dynamic: boolean;
-    private physicsService: RapierPhysicsService;
+    private _options: RapierPhysicsComponentOptions;
 
-    constructor(physicsService: RapierPhysicsService, position = { x: 0, y: 0, z: 0 }, dynamic = true) {
-        super();
-        this.physicsService = physicsService;
-        this.position = position;
-        this.dynamic = dynamic;
+    constructor(serviceLocator: ServiceLocator, options?: Partial<RapierPhysicsComponentOptions>) {
+        super(serviceLocator);
+        this._options = {
+            dynamic: true,
+            position: { x: 0, y: 0, z: 0 },
+            rotation: { x: 0, y: 0, z: 0, w: 1 },
+            size: { x: 1, y: 1, z: 1 },
+            friction: 0.5,
+            type: 'dynamic',
+            isCcdEnabled: false,
+            ...options,
+        };
+    }
+
+    override init(): Promise<void> {
+        console.log('init', this.entity?.name, this.entity?.getId(), 'RapierPhysicsComponent');
+        const world = this.serviceLocator.get('physics').getWorld();
+
+        const bodyDescBuilder: Record<RapierPhysicsComponentType, () => RAPIER.RigidBodyDesc> = {
+            dynamic: () => RAPIER.RigidBodyDesc.dynamic(),
+            static: () => RAPIER.RigidBodyDesc.fixed(),
+            kinematic: () => RAPIER.RigidBodyDesc.kinematicVelocityBased(),
+        };
+        const bodyDesc = bodyDescBuilder[this._options.type]();
+        if (this._options.isCcdEnabled) {
+            bodyDesc.setCcdEnabled(true);
+        }
+
+        const { x: px, y: py, z: pz } = this._options.position;
+        bodyDesc.setTranslation(px, py, pz);
+
+        const { x: rx, y: ry, z: rz, w: rw } = this._options.rotation;
+        bodyDesc.setRotation({ x: rx, y: ry, z: rz, w: rw });
+
+        this.body = world.createRigidBody(bodyDesc);
+        return Promise.resolve();
     }
 
     override start(): void {
-        const world = this.physicsService.getWorld();
-
-        const bodyDesc = this.dynamic
-            ? RAPIER.RigidBodyDesc.dynamic()
-            : RAPIER.RigidBodyDesc.fixed();
-
-        bodyDesc.setTranslation(this.position.x, this.position.y, this.position.z);
-
-        this.body = world.createRigidBody(bodyDesc);
-        console.log("[RapierPhysicsComponent] Body created:", this.body);
-
-        const bbox = this.entity?.tryGetComponent(BoundingBoxComponent);
-        if (!bbox) {
-            console.warn("[RapierPhysicsComponent] Missing BoundingBoxComponent");
+        if (!this.entity) {
+            console.error('[RapierPhysicsComponent] Entity is undefined. This component is not properly attached to an entity.');
             return;
         }
 
-        bbox.onReady(() => {
-            const half = bbox.getHalfSize();
-            console.log("[RapierPhysicsComponent] Creating collider with size:", half);
+        const components = this.entity.getComponents();
 
-            const colliderDesc = RAPIER.ColliderDesc.cuboid(half.x, half.y, half.z)
-                .setRestitution(0.1)
-                .setFriction(0.5);
+        const hitbox = components.find(c => c instanceof _HitboxComponent);
+        if (!hitbox) {
+            console.warn(`[RapierPhysicsComponent] No hitbox found for entity ${this.entity.name} (ID: ${this.entity.getId()})`);
+            return;
+        }
 
-            this.collider = world.createCollider(colliderDesc, this.body);
-            console.log("[RapierPhysicsComponent] Collider created:", this.collider);
-        });
+        const colliderDesc = hitbox.getColliderDesc();
+
+        const world = this.serviceLocator.get('physics').getWorld();
+        this.collider = world.createCollider(colliderDesc, this.body);
     }
 
 
     isGrounded(): boolean {
         const vel = this.body.linvel();
         return Math.abs(vel.y) < 0.1;
-    }
-
-    override update(dt: number): void {
-        const transform = this.entity?.getComponent?.(TransformComponent);
-        if (transform) {
-            const pos = this.body.translation();
-            transform.position.x = pos.x;
-            transform.position.y = pos.y;
-            transform.position.z = pos.z;
-        }
     }
 
     setVelocity(vel: { x: number; y: number; z: number }) {

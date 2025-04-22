@@ -6,6 +6,7 @@
     },
     "devDependencies": {
         "@unocss/nuxt": "^66.1.0-beta.10",
+        "happy-dom": "^17.4.4",
         "unocss": "^66.1.0-beta.10"
     },
     "dependencies": {
