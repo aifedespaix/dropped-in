@@ -19,5 +19,9 @@
   },
   "trustedDependencies": [
     "@parcel/watcher"
-  ]
+  ],
+  "devDependencies": {
+    "jsdom": "^26.1.0",
+    "vitest": "^3.1.2"
+  }
 }
