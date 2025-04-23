@@ -5,7 +5,7 @@ import type { ActionChannel } from '../types/ActionChannel';
 
 export class JumpAction extends _Action {
     private jumped = false;
-    private force = 5;
+    private force = 10;
 
     override start(entity: _Entity): void {
         this.entity = entity;

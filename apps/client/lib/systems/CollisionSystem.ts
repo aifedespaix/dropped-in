@@ -7,26 +7,31 @@ import * as THREE from 'three';
 import type { ServiceLocator } from '../services/ServiceLocator';
 import { CollisionStateComponent } from '../components/CollisionStateComponent';
 
+/**
+ * Détecte les collisions entre les entités.
+ * 
+ */
 export class CollisionSystem extends _System {
     private sourceEntity: _Entity;
+    private targetEntities: _Entity[];
     private collidingPairs = new Set<string>();
     private _serviceLocator: ServiceLocator;
 
     private collisionColor = 0xff0000;
     private noCollisionColor = 0x00ff00;
 
-    constructor(serviceLocator: ServiceLocator, sourceEntity: _Entity) {
+    constructor(serviceLocator: ServiceLocator, sourceEntity: _Entity, targetEntities: _Entity[]) {
         super();
         this.sourceEntity = sourceEntity;
         this._serviceLocator = serviceLocator;
+        this.targetEntities = targetEntities.filter(entity => entity.hasComponent(RapierPhysicsComponent));
     }
 
-    update(dt: number, entities: _Entity[]): void {
-        const physicsEntities = entities.filter(e => e.hasComponent(RapierPhysicsComponent));
+    update(dt: number): void {
         const currentFramePairs = new Set<string>();
         let sourceHasCollision = false;
 
-        for (const targetEntity of physicsEntities) {
+        for (const targetEntity of this.targetEntities) {
             if (targetEntity === this.sourceEntity) continue;
             const key = this.getPairKey(targetEntity, this.sourceEntity);
 

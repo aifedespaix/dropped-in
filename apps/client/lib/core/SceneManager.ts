@@ -28,7 +28,6 @@ export class SceneManager {
         const ramp = new RampEntity(this.serviceLocator);
         const platform = new PlatformEntity(this.serviceLocator);
 
-
         const promises: Promise<void>[] = [];
         promises.push(this.addEntity(player));
         promises.push(this.addEntity(cube));
@@ -39,22 +38,22 @@ export class SceneManager {
         await Promise.all(promises);
 
         floor.getComponent(TransformComponent).position.y = -2;
-        // await this.addCollisionDetectionToPlayer();
         await this.addSystems();
     }
 
     private async addSystems() {
         const player = this.entities.find(entity => entity instanceof PlayerEntity);
         if (!player) throw new Error('Player not found');
-        const collisionSystem = new CollisionSystem(this.serviceLocator, player);
+
+        const collisionSystem = new CollisionSystem(this.serviceLocator, player, this.entities);
         await this.addSystem(collisionSystem);
 
-        // const platformFollowerSystem = new PlatformFollowerSystem(player);
-        // await this.addSystem(platformFollowerSystem);
+        const platformFollowerSystem = new PlatformFollowerSystem(player, this.entities);
+        await this.addSystem(platformFollowerSystem);
     }
 
     private async addSystem(system: _System) {
-        system.init?.(this.entities);
+        // system.init?.(); // not needed at the moment
         this.systems.push(system);
     }
 
@@ -72,7 +71,7 @@ export class SceneManager {
             entity.update(dt);
         }
         for (const system of this.systems) {
-            system.update(dt, this.entities);
+            system.update(dt);
         }
     }
 

@@ -1,16 +1,11 @@
 {
     "scripts": {
-        "dev:client": "bun run --cwd apps/client dev",
-        "dev:server": "bun run --cwd apps/server start:dev",
+        "client:dev": "bun run --cwd apps/client dev",
+        "server:dev": "bun run --cwd apps/server start:dev",
         "dev": "bun run dev:client & bun run dev:server"
     },
-    "devDependencies": {
-        "@unocss/nuxt": "^66.1.0-beta.10",
-        "happy-dom": "^17.4.4",
-        "unocss": "^66.1.0-beta.10"
-    },
     "dependencies": {
-        "@pinia/nuxt": "^0.10.1",
-        "pinia": "^3.0.1"
+        "@vueuse/core": "^13.1.0",
+        "@vueuse/nuxt": "^13.1.0"
     }
 }

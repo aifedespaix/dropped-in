@@ -27,7 +27,7 @@ export class PlatformEntity extends _Entity {
             rotation: quaternion
         }
         const rotationOptions: Partial<RotatorComponentOptions> = {
-            speedY: 2,
+            speedY: 1,
         }
         this.addComponent(new PrimitiveRenderComponent(this.serviceLocator, platformOptions));
         this.addComponent(new PhysicRotationComponent(this.serviceLocator, rotationOptions));

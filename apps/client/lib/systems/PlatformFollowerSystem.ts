@@ -3,51 +3,66 @@ import { _Entity } from "../entities/_Entity";
 import { _System } from "./_System";
 import * as THREE from 'three';
 import { CollisionStateComponent } from "../components/CollisionStateComponent";
-export class PlatformFollowerSystem extends _System {
-    private sourceEntity: _Entity;
 
-    constructor(sourceEntity: _Entity) {
+/**
+ * Suit une entité en contact avec une autre entité.
+ * Ne suit qu'une entité à la fois. Elle doit avoir un CollisionStateComponent.
+ */
+export class PlatformFollowerSystem extends _System {
+    private _sourceEntity: _Entity;
+    private _targetEntities: _Entity[];
+
+    constructor(sourceEntity: _Entity, targetEntities: _Entity[]) {
         super();
-        this.sourceEntity = sourceEntity;
+        this._sourceEntity = sourceEntity;
+        this._targetEntities = targetEntities.filter(entity => entity.hasComponent(CollisionStateComponent));
     }
 
-    update(dt: number, entities: _Entity[]): void {
-        const playerPhysics = this.sourceEntity.tryGetComponent(RapierPhysicsComponent);
-        if (!playerPhysics) return;
+    update(dt: number): void {
+        const playerPhysics = this._sourceEntity.getComponent(RapierPhysicsComponent);
+        const targetEntity = this._findTargetEntity()
+        if (!targetEntity) return;
 
-        console.log("PlatformFollowerSystem");
-        // On ne suit qu'une seule plateforme : la première en contact avec un tag ou condition
-        for (const entity of entities) {
-            const collisionStateComponent = entity.tryGetComponent(CollisionStateComponent);
-            if (!collisionStateComponent) continue;
+        const platformPhysics = targetEntity.getComponent(RapierPhysicsComponent);
 
-            const platformPhysics = entity.tryGetComponent(RapierPhysicsComponent);
-            if (!platformPhysics) continue;
+        const playerPos = playerPhysics.body.translation();
+        const platformPos = platformPhysics.body.translation();
+        const relativePos = new THREE.Vector3().subVectors(
+            new THREE.Vector3(playerPos.x, playerPos.y, playerPos.z),
+            new THREE.Vector3(platformPos.x, platformPos.y, platformPos.z)
+        );
 
-            const playerPos = playerPhysics.body.translation();
-            const platformPos = platformPhysics.body.translation();
-            const relativePos = new THREE.Vector3(
-                playerPos.x - platformPos.x,
-                playerPos.y - platformPos.y,
-                playerPos.z - platformPos.z
-            );
+        const platformVel = platformPhysics.body.linvel();
+        const platformAngVel = platformPhysics.body.angvel();
 
-            const platformVel = platformPhysics.body.linvel();
-            const platformAngVel = platformPhysics.body.angvel();
+        const r = new THREE.Vector3(relativePos.x, relativePos.y, relativePos.z);
+        const omega = new THREE.Vector3(platformAngVel.x, platformAngVel.y, platformAngVel.z);
+        const rotationVel = new THREE.Vector3().crossVectors(omega, r);
 
-            const r = new THREE.Vector3(relativePos.x, relativePos.y, relativePos.z);
-            const omega = new THREE.Vector3(platformAngVel.x, platformAngVel.y, platformAngVel.z);
-            const rotationVel = new THREE.Vector3().crossVectors(omega, r);
+        const currentVel = playerPhysics.body.linvel();
 
-            const finalVelocity = new THREE.Vector3(
-                platformVel.x + rotationVel.x,
-                platformVel.y + rotationVel.y,
-                platformVel.z + rotationVel.z
-            );
+        const usePlatformX = Math.abs(currentVel.x) < 0.01;
+        const usePlatformZ = Math.abs(currentVel.z) < 0.01;
 
-            playerPhysics.body.setLinvel({ x: finalVelocity.x, y: playerPhysics.body.linvel().y, z: finalVelocity.z }, true);
-            break; // on ne suit qu'une seule plateforme à la fois
+        const finalVelocity = new THREE.Vector3(
+            usePlatformX ? platformVel.x + rotationVel.x : currentVel.x,
+            currentVel.y,
+            usePlatformZ ? platformVel.z + rotationVel.z : currentVel.z
+        );
 
-        }
+        playerPhysics.body.setLinvel({
+            x: finalVelocity.x,
+            y: finalVelocity.y,
+            z: finalVelocity.z
+        }, true);
+    }
+
+    private _findTargetEntity(): _Entity | undefined {
+        return this._targetEntities.find(entity =>
+            entity
+                .getComponent(CollisionStateComponent)
+                ?.isCollidingWith(this._sourceEntity.name)
+        );
     }
 }
+

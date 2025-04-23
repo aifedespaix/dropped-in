@@ -4,6 +4,10 @@ import { _Component } from "./_Component";
 export class CollisionStateComponent extends _Component {
     private collidingEntities: Set<_Entity> = new Set();
 
+    override update(dt: number): void {
+        console.log(this.collidingEntities, this.entity?.name);
+    }
+
     add(entity: _Entity) {
         this.collidingEntities.add(entity);
     }

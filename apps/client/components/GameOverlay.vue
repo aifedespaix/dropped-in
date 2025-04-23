@@ -1,59 +1,13 @@
 <template>
-    <!-- Conteneur Three.js -->
-    <div ref="gameContainer" class="fixed inset-0 w-full h-full overflow-x-hidden">
-        <!-- Menu principal -->
-        <div v-if="!gameStore.isPlaying"
-            class="fixed inset-0 w-full h-full flex justify-center items-center z-1000 overflow-x-hidden" bg="black/80">
-            <div class="p-8 rounded-lg text-center w-120 max-w-[90vw] h-[80vh] flex flex-col overflow-x-hidden"
-                bg="light/10 " text="white">
-                <h1 class="text-2xl font-bold mb-4">Menu</h1>
-                <div class="flex flex-col gap-2 flex-1 overflow-y-auto w-full overflow-x-hidden tiny-scrollbar">
-                    <div v-if="!currentMenu">
-                        <div class="flex flex-col gap-2">
-                            <SettingsButton text="Jouer" variant="primary" @click="startGame" />
-                            <SettingsButton text="Options" variant="secondary" @click="currentMenu = menus.options" />
-                            <!-- <SettingsButton text="Quitter" variant="danger" @click="gameStore.quit()" /> -->
-                        </div>
-                    </div>
-
-                    <!-- Menu Raccourcis -->
-                    <component v-else :is="currentMenu" @close="currentMenu = $event" />
-                </div>
-
-                <div class="mt-4">
-                    <SettingsButton v-if="currentMenu" text="Retour" variant="default"
-                        @click="currentMenu = undefined" />
-                </div>
-            </div>
-        </div>
+    <div class="absolute inset-0 grid grid-cols-10 grid-rows-10">
+        <div class="col-1 row-1 bg-red-500"></div>
+        <div class="col-8 row-8 bg-blue-500"></div>
+        <div class="col-10 row-10 bg-green-500"></div>
+        <div class="col-10 row-10 bg-yellow-500"></div>
+        <div class="col-10 row-10 bg-purple-500"></div>
+        <div class="col-10 row-10 bg-pink-500"></div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { useGameStore } from '~/stores/game.store'
-import SettingsButton from './Settings/Buttons.vue'
-// import ShortcutsModal from './ShortcutsModal.vue'
-import { watch } from 'vue'
-import { OverlayShortcuts } from '#components'
-
-const gameStore = useGameStore()
-const gameContainer = ref<HTMLElement | null>(null)
-
-const currentMenu = shallowRef<Component>()
-
-const menus = {
-    options: OverlayShortcuts
-}
-
-const startGame = async () => {
-    // D'abord cacher le menu
-    await gameStore.play()
-}
-
-// Surveiller les changements d'état du jeu
-watch(() => gameStore.isPlaying, (isPlaying) => {
-    if (!isPlaying) {
-        currentMenu.value = undefined
-    }
-})
 </script>

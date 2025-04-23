@@ -8,7 +8,7 @@ import type { _Entity } from '../entities/_Entity';
  * Les systèmes sont indépendants les uns des autres.
  */
 export abstract class _System {
-    abstract update(dt: number, entities: _Entity[]): void;
+    abstract update(dt: number): void;
 
     // Optionnel : pour initialiser avec le monde ou d'autres services
     init?(entities: _Entity[]): void;

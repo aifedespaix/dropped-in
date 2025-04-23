@@ -3,8 +3,6 @@ import { _RenderComponent } from '../components/render/_RenderComponent';
 import type { ServiceLocator } from '../services/ServiceLocator';
 import * as THREE from 'three';
 
-let entityIdCounter = 0;
-
 /**
  * Une entité est un objet qui possède des composants.
  * 
@@ -13,15 +11,15 @@ let entityIdCounter = 0;
  * Une entité peut avoir plusieurs composants.
  */
 export abstract class _Entity {
+    static idCounter = 0;
     private id: number;
     private components: Map<string, _Component> = new Map();
     protected serviceLocator: ServiceLocator;
-    static idCounter = 0;
 
     abstract init(): Promise<void>;
 
     constructor(serviceLocator: ServiceLocator) {
-        this.id = entityIdCounter++;
+        this.id = _Entity.idCounter++;
         this.serviceLocator = serviceLocator;
     }
 

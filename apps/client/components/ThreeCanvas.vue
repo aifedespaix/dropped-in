@@ -1,6 +1,6 @@
 <template>
     <div ref="container" class="fixed inset-0 w-full h-full">
-        <!-- <GameOverlay /> -->
+        <GameOverlay />
     </div>
 </template>
 
