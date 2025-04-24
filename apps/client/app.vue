@@ -1,11 +1,14 @@
 <template>
-  <div id="app" class="min-h-screen w-screen overflow-hidden font-default">
+  <div
+    id="app"
+    class="min-h-screen w-screen overflow-hidden font-default"
+  >
     <ThreeCanvas />
   </div>
 </template>
 
 <script setup lang="ts">
-import '@unocss/reset/eric-meyer.css'
+import '@unocss/reset/tailwind.css'
 
 useHead({
   link: [

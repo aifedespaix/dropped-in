@@ -1,82 +1,73 @@
-// core/GameEngine.ts
-
 import { SceneManager } from '../core/SceneManager';
-import { InputManager } from '../core/InputManager';
 import { ActionManager } from '../core/ActionManager';
-import { _Entity } from '../entities/_Entity';
 import { ThreeRenderService } from '../services/ThreeRenderService';
 import { RapierPhysicsService } from '../services/RapierPhysicsService';
-import { ServiceLocator } from '../services/ServiceLocator';
+import { ServiceLocator, type ServiceKey, type ServiceMap } from '../services/ServiceLocator';
+import { InputService } from '../services/InputService';
+import { RenderLoop } from './RenderLoop';
 
 export class GameEngine {
-    private sceneManager!: SceneManager;
-    private inputManager: InputManager;
     private actionManager: ActionManager;
     private serviceLocator: ServiceLocator;
-    // private networkManager: NetworkManager;
-    // private aiController: AIController;
 
-    private entities: _Entity[] = [];
-    private lastUpdateTime: number = performance.now();
-    private running: boolean = false;
-    private target: HTMLElement;
+    // Delayed initialization
+    private renderLoop!: RenderLoop;
+    private sceneManager!: SceneManager;
 
-    constructor(target: HTMLElement) {
+
+    constructor(private target: HTMLElement) {
         this.target = target;
 
         this.serviceLocator = new ServiceLocator();
-
-        this.inputManager = InputManager.getInstance();
         this.actionManager = ActionManager.getInstance();
-        // this.networkManager = new NetworkManager();
-        // this.aiController = new AIController();
-    }
-
-    private registerServices(): void {
-        this.serviceLocator.register('render', new ThreeRenderService(this.target));
-        this.serviceLocator.register('physics', new RapierPhysicsService());
     }
 
     public async init(): Promise<void> {
         console.log("[GameEngine] Initializing...");
-        this.registerServices();
+        await this.registerServices();
+        this.initSceneManager();
+        this.initRenderLoop();
+    }
 
-        const physicsService = this.serviceLocator.get('physics');
-        await physicsService.init();
-
+    private initSceneManager(): void {
         this.sceneManager = new SceneManager(this.serviceLocator);
-        await this.sceneManager.loadInitialScene();
-
-        this.entities = this.sceneManager.getEntities();
-        this.inputManager.init();
-        // this.networkManager.init();
-
-        this.running = true;
-        requestAnimationFrame(this.boundLoop);
+        this.sceneManager.loadInitialScene();
     }
 
-    private gameLoop(currentTime: number): void {
-        const dt = (currentTime - this.lastUpdateTime) / 1000;
-        this.lastUpdateTime = currentTime;
+    private async registerServices(): Promise<void> {
+        const promises: Promise<void>[] = [];
+        const renderService = new ThreeRenderService(this.target);
+        promises.push(this.registerService('render', renderService));
 
-        this.update(dt);
-        this.render();
+        const physicsService = new RapierPhysicsService();
+        promises.push(this.registerService('physics', physicsService));
 
-        if (this.running) {
-            requestAnimationFrame(this.boundLoop);
-        }
+        const inputService = new InputService();
+        promises.push(this.registerService('input', inputService));
+
+        await Promise.all(promises);
     }
 
-    private boundLoop = this.gameLoop.bind(this);
+    private async registerService(name: ServiceKey, service: ServiceMap[ServiceKey]): Promise<void> {
+        this.serviceLocator.register(name, service);
+        await service.init();
+    }
 
+    private initRenderLoop(): void {
+        this.renderLoop = new RenderLoop(
+            this.update.bind(this),
+            this.render.bind(this),
+            30
+        );
+    }
 
     private update(dt: number): void {
         const physicsService = this.serviceLocator.get('physics');
         physicsService.step();
 
-        this.inputManager.update(dt);
-        // this.networkManager.update(dt);
-        // this.aiController.update(dt);
+        const inputService = this.serviceLocator.get('input');
+        inputService.update(dt);
+
         this.actionManager.update(dt);
         this.sceneManager.update(dt);
     }
@@ -86,30 +77,10 @@ export class GameEngine {
     }
 
     public stop(): void {
-        this.running = false;
+        this.renderLoop.stop();
     }
 
-    public getSceneManager(): SceneManager {
-        return this.sceneManager;
-    }
-
-    public getInputManager(): InputManager {
-        return this.inputManager;
-    }
-
-    public getActionManager(): ActionManager {
-        return this.actionManager;
-    }
-
-    // public getNetworkManager(): NetworkManager {
-    // return this.networkManager;
-    // }
-    // 
-    // public getAIController(): AIController {
-    // return this.aiController;
-    // }
-
-    public addEntity(entity: _Entity): void {
-        this.entities.push(entity);
+    public start(): void {
+        this.renderLoop.start();
     }
 }

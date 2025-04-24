@@ -21,7 +21,7 @@ export class PusherEntity extends _Entity {
         const physicsOptions: Partial<RapierPhysicsComponentOptions> = {
             position: { x: 0, y: 0, z: -30 },
             friction: 0,
-            type: 'kinematic'
+            type: 'kinematicVelocity'
         }
         const rotationOptions: Partial<RotatorComponentOptions> = {
             speedY: 5,

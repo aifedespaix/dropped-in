@@ -5,6 +5,8 @@ export const useGameStore = defineStore('game', () => {
     const isInitialized = ref(false);
     const gameEngine = shallowRef<GameEngine | null>(null);
 
+    const isGameStarted = ref(false);
+
     function initGameEngine(container: HTMLElement) {
         if (isInitialized.value) {
             return;
@@ -16,9 +18,21 @@ export const useGameStore = defineStore('game', () => {
         gameEngine.value = engine;
     }
 
+    function play() {
+        gameEngine.value?.start();
+        isGameStarted.value = true;
+    }
+
+    function stop() {
+        gameEngine.value?.stop();
+        isGameStarted.value = false;
+    }
+
     return {
         isInitialized,
         gameEngine,
-        initGameEngine
+        initGameEngine,
+        play,
+        stop
     }
 })

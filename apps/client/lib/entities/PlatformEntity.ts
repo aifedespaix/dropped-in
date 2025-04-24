@@ -14,16 +14,16 @@ export class PlatformEntity extends _Entity {
             type: 'box',
             width: 50,
             height: 10,
-            depth: 1,
+            depth: 0.1,
             color: new THREE.Color(0x000000)
         }
 
         const euler = new THREE.Euler(THREE.MathUtils.degToRad(90), 0, 0, 'XYZ');
         const quaternion = new THREE.Quaternion().setFromEuler(euler);
         const physicsOptions: Partial<RapierPhysicsComponentOptions> = {
-            position: { x: -30, y: 0, z: 0 },
+            position: { x: -30, y: -0.8, z: 40 },
             friction: 0,
-            type: 'kinematic',
+            type: 'kinematicVelocity',
             rotation: quaternion
         }
         const rotationOptions: Partial<RotatorComponentOptions> = {

@@ -20,7 +20,6 @@ export class GlbRenderComponent extends _RenderComponent {
     }
 
     getObject3D(): THREE.Object3D {
-        console.log(this.model);
         return this.model;
     }
 

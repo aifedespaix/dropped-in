@@ -8,22 +8,33 @@ export abstract class _RenderComponent extends _Component {
     protected model!: THREE.Object3D;
 
     public render(): void {
-        const physics = this.entity?.getComponent(RapierPhysicsComponent);
+        const physics = this.entity?.tryGetComponent(RapierPhysicsComponent, false);
         if (physics) {
-            const pos = physics.body.translation();
-            const rot = physics.body.rotation();
-
-            this.model.position.set(pos.x, pos.y, pos.z);
-            this.model.quaternion.set(rot.x, rot.y, rot.z, rot.w);
+            this._renderPhysics(physics);
             return;
         }
 
-        // fallback si pas de physique
-        const transform = this.entity?.getComponent(TransformComponent);
+        // Si pas de physique, on utilise la transform
+        const transform = this.entity?.tryGetComponent(TransformComponent, false);
         if (transform) {
-            this.model.position.copy(transform.position);
-            this.model.rotation.copy(transform.rotation);
-            this.model.scale.copy(transform.scale);
+            this._renderTransform(transform);
+            return;
         }
+
+        console.warn('[RenderComponent] No physics or transform found');
+    }
+
+    private _renderPhysics(physics: RapierPhysicsComponent): void {
+        const pos = physics.body.translation();
+        const rot = physics.body.rotation();
+
+        this.model.position.set(pos.x, pos.y, pos.z);
+        this.model.quaternion.set(rot.x, rot.y, rot.z, rot.w);
+    }
+
+    private _renderTransform(transform: TransformComponent): void {
+        this.model.position.copy(transform.position);
+        this.model.rotation.copy(transform.rotation);
+        this.model.scale.copy(transform.scale);
     }
 }

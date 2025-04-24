@@ -23,6 +23,12 @@ export default defineConfig({
             processors: createLocalFontProcessor(),
         }),
     ],
+    theme: {
+        colors: {
+            primary: '#023E8A',
+            secondary: '#00B4D8',
+        }
+    },
     transformers: [
         transformerDirectives(),
         transformerVariantGroup(),

@@ -3,8 +3,9 @@ import * as RAPIER from '@dimforge/rapier3d-compat';
 import type { ServiceLocator } from '~/lib/services/ServiceLocator';
 import { _HitboxComponent } from '../hitbox/_HitboxComponent';
 import { _RenderComponent } from '../render/_RenderComponent';
+import { Vector3, Quaternion, Euler } from 'three';
 
-type RapierPhysicsComponentType = 'dynamic' | 'static' | 'kinematic';
+type RapierPhysicsComponentType = 'dynamic' | 'static' | 'kinematicVelocity' | 'kinematicPosition';
 
 export type RapierPhysicsComponentOptions = {
     dynamic: boolean;
@@ -42,7 +43,8 @@ export class RapierPhysicsComponent extends _Component {
         const bodyDescBuilder: Record<RapierPhysicsComponentType, () => RAPIER.RigidBodyDesc> = {
             dynamic: () => RAPIER.RigidBodyDesc.dynamic(),
             static: () => RAPIER.RigidBodyDesc.fixed(),
-            kinematic: () => RAPIER.RigidBodyDesc.kinematicVelocityBased(),
+            kinematicVelocity: () => RAPIER.RigidBodyDesc.kinematicVelocityBased(),
+            kinematicPosition: () => RAPIER.RigidBodyDesc.kinematicPositionBased(),
         };
         const bodyDesc = bodyDescBuilder[this._options.type]();
         if (this._options.isCcdEnabled) {
@@ -96,5 +98,40 @@ export class RapierPhysicsComponent extends _Component {
     applyImpulse({ x = 0, y = 0, z = 0 }: { x?: number; y?: number; z?: number }) {
         const impulse = new RAPIER.Vector3(x, y, z);
         this.body.applyImpulse(impulse, true);
+    }
+
+    addYawRotation(deltaYaw: number) {
+        const currentRot = this.body.rotation();
+        const currentQuat = new RAPIER.Quaternion(currentRot.x, currentRot.y, currentRot.z, currentRot.w);
+
+        const axis = new RAPIER.Vector3(0, 1, 0);
+        const yawQuat = new RAPIER.Quaternion(
+            Math.sin(deltaYaw / 2) * axis.x,
+            Math.sin(deltaYaw / 2) * axis.y,
+            Math.sin(deltaYaw / 2) * axis.z,
+            Math.cos(deltaYaw / 2)
+        );
+
+        const newQuat = new RAPIER.Quaternion(
+            yawQuat.x * currentQuat.w + yawQuat.w * currentQuat.x + yawQuat.y * currentQuat.z - yawQuat.z * currentQuat.y,
+            yawQuat.y * currentQuat.w + yawQuat.w * currentQuat.y + yawQuat.z * currentQuat.x - yawQuat.x * currentQuat.z,
+            yawQuat.z * currentQuat.w + yawQuat.w * currentQuat.z + yawQuat.x * currentQuat.y - yawQuat.y * currentQuat.x,
+            yawQuat.w * currentQuat.w - yawQuat.x * currentQuat.x - yawQuat.y * currentQuat.y - yawQuat.z * currentQuat.z
+        );
+        this.body.setRotation(newQuat, true);
+    }
+
+    rotateY(dyaw: number) {
+        const rot = this.body.rotation();
+        const quat = new Quaternion(rot.x, rot.y, rot.z, rot.w);
+        const delta = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), dyaw);
+        quat.multiplyQuaternions(delta, quat);
+        this.body.setRotation({ x: quat.x, y: quat.y, z: quat.z, w: quat.w }, true);
+    }
+
+    getEuler(): Euler {
+        const rot = this.body.rotation();
+        const quat = new Quaternion(rot.x, rot.y, rot.z, rot.w);
+        return new Euler().setFromQuaternion(quat, 'YXZ');
     }
 }

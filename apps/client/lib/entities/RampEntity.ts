@@ -22,7 +22,7 @@ export class RampEntity extends _Entity {
             color: new THREE.Color(0x883388)
         }
 
-        const euler = new THREE.Euler(THREE.MathUtils.degToRad(90), THREE.MathUtils.degToRad(15), 0, 'XYZ');
+        const euler = new THREE.Euler(THREE.MathUtils.degToRad(90), THREE.MathUtils.degToRad(65), 0, 'XYZ');
         const quaternion = new THREE.Quaternion().setFromEuler(euler);
         const physicsOptions: Partial<RapierPhysicsComponentOptions> = {
             position: { x: 10, y: -1.5, z: -10 },

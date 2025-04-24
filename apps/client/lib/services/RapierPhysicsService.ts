@@ -1,10 +1,11 @@
 import * as RAPIER from '@dimforge/rapier3d-compat';
+import { _Service } from './_Service';
 
-export class RapierPhysicsService {
+export class RapierPhysicsService extends _Service {
     private gravity = new RAPIER.Vector3(0, -9.81, 0);
     private world!: RAPIER.World;
 
-    async init(): Promise<void> {
+    override async init(): Promise<void> {
         await RAPIER.init();
         this.world = new RAPIER.World(this.gravity);
     }
