@@ -1,13 +1,13 @@
-import { _Entity } from './_Entity';
-import { _RenderComponent } from '../components/render/_RenderComponent';
-import { InputComponent } from '../components/InputComponent';
-import { ActionComponent } from '../components/ActionComponent';
-import { GlbRenderComponent } from '../components/render/GlbRenderComponent';
-import { MovementControllerComponent } from '../components/physics/MovementController.component';
-import { RapierPhysicsComponent, type RapierPhysicsComponentOptions } from '../components/physics/RapierPhysicsComponent';
-import { HitboxHelperComponent } from '../components/helpers/HitboxHelperComponent';
-import { HitboxCapsuleComponent } from '../components/hitbox/HitBoxCapsuleComponent';
-import { CollisionStateComponent } from '../components/CollisionStateComponent';
+import { _Entity } from '../_Entity';
+import { _RenderComponent } from '../../components/render/_RenderComponent';
+import { InputComponent } from '../../components/InputComponent';
+import { ActionComponent } from '../../components/ActionComponent';
+import { GlbRenderComponent } from '../../components/render/GlbRenderComponent';
+import { MovementControllerComponent } from '../../components/physics/MovementController.component';
+import { RapierPhysicsComponent, type RapierPhysicsComponentOptions } from '../../components/physics/RapierPhysicsComponent';
+import { HitboxHelperComponent } from '../../components/helpers/HitboxHelperComponent';
+import { HitboxCapsuleComponent } from '../../components/hitbox/HitBoxCapsuleComponent';
+import { CollisionStateComponent } from '../../components/CollisionStateComponent';
 
 export class PlayerEntity extends _Entity {
     async init(): Promise<void> {

@@ -1,134 +1,87 @@
-import { Euler, Quaternion, Vector3 } from 'three';
+import { Vector3, Quaternion } from 'three';
+import { _Component } from '../_Component';
+import { ServiceLocator } from '../../services/ServiceLocator';
 import { RapierPhysicsComponent } from '../physics/RapierPhysicsComponent';
 import { InputComponent } from '../InputComponent';
-import { ServiceLocator } from '../../services/ServiceLocator';
-import { _Component } from '../_Component';
 import * as RAPIER from '@dimforge/rapier3d-compat';
 
 const GRAVITY = 9.81;
+
 export class MovementControllerComponent extends _Component {
-    private characterController!: RAPIER.KinematicCharacterController;
-    private speedInMetersBySecond = 5; // m/s
-    private jumpForce = 6;
+    private controller!: RAPIER.KinematicCharacterController;
     private verticalSpeed = 0;
+    private jumpForce = 6;
+    private speed = 5;
     private isJumping = false;
 
+    private inputComponent!: InputComponent;
+    private physicsComponent!: RapierPhysicsComponent;
+
+    private lastPlatformPos: RAPIER.Vector3 | null = null;
 
     constructor(serviceLocator: ServiceLocator) {
         super(serviceLocator);
     }
 
-    override init(): Promise<void> {
+    override async init(): Promise<void> {
         const world = this.serviceLocator.get('physics').getWorld();
-        this.characterController = world.createCharacterController(0.01);
 
-        this.characterController.setMaxSlopeClimbAngle(45 * Math.PI / 180);
-        this.characterController.setMinSlopeSlideAngle(30 * Math.PI / 180);
-        this.characterController.enableAutostep(0.5, 0.2, true);
-        this.characterController.enableSnapToGround(0.5);
-        this.characterController.setCharacterMass(80);
-        this.characterController.setApplyImpulsesToDynamicBodies(true);
-        this.characterController.setSlideEnabled(true);
-        return Promise.resolve();
+        this.controller = world.createCharacterController(0.01);
+        this.controller.setCharacterMass(80);
+        this.controller.setSlideEnabled(true);
+        this.controller.enableSnapToGround(0.6);
+        this.controller.enableAutostep(0.5, 0.2, true);
+        this.controller.setMaxSlopeClimbAngle(Math.PI / 4);
+        this.controller.setMinSlopeSlideAngle(Math.PI / 6);
+    }
+
+    override start(): void {
+        this.inputComponent = this.entity?.getComponent(InputComponent);
+        this.physicsComponent = this.entity?.getComponent(RapierPhysicsComponent);
     }
 
     override update(dt: number): void {
-        const physics = this.entity?.getComponent(RapierPhysicsComponent);
-        if (!physics?.body) return;
+        const movement = this.calculateMovement(dt);
+        this.controller.computeColliderMovement(this.physicsComponent.collider, movement);
 
-        const desiredMovement = this.getRelativeMovementInput(dt, physics);
-        this.applyCharacterMovement(desiredMovement, physics);
-    }
-
-    private getRelativeMovementInput(dt: number, physics: RapierPhysicsComponent): Vector3 {
-        const input = this.entity?.getComponent(InputComponent);
-        const inputDir = input?.getDirection(); // { x, z }
-        const inputDirection = new Vector3(inputDir.x, 0, inputDir.z);
-
-        // Rotation du personnage
-        const rotation = physics.body.rotation();
-        const quat = new Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
-        inputDirection.applyQuaternion(quat);
-
-        // Appliquer la vitesse
-        const moveVec = inputDirection.normalize().multiplyScalar(this.speedInMetersBySecond);
-
-        // Gravité
-        this.verticalSpeed -= GRAVITY * dt;
-        moveVec.y = this.verticalSpeed;
-
-        // Si au sol, reset vertical
-        if (this.characterController.computedGrounded()) {
+        if (this.grounded) {
             this.verticalSpeed = 0;
             this.isJumping = false;
         }
 
-        return moveVec.multiplyScalar(dt); // movement à passer au CharacterController
+        // 3. Récupère le vecteur de déplacement calculé
+        const finalMove = this.controller.computedMovement();
+
+        // 4. Applique le déplacement à la main
+        const currentPos = this.physicsComponent.body.translation();
+        this.physicsComponent.body.setTranslation({
+            x: currentPos.x + finalMove.x,
+            y: currentPos.y + finalMove.y,
+            z: currentPos.z + finalMove.z,
+        }, true); // true = wake up the body
     }
 
-    private applyCharacterMovement(movement: Vector3, physics: RapierPhysicsComponent): void {
-        const world = this.serviceLocator.get('physics').getWorld();
-
-        // Appliquer le mouvement souhaité
-        this.characterController.computeColliderMovement(physics.collider, movement);
-
-        // Vérifier si le personnage est au sol
-        if (this.characterController.computedGrounded()) {
-            const numCollisions = this.characterController.numComputedCollisions();
-
-            for (let i = 0; i < numCollisions; i++) {
-                const collision = this.characterController.computedCollision(i);
-
-                // Vérifie que la collision est valide et qu'elle vient du bas
-                if (!collision) continue;
-                const normal = collision.normal1;
-                if (normal.y > 0.5 && collision.collider) {
-                    const parentHandle = collision.collider.parent();
-                    if (parentHandle !== null) {
-                        const platformBody = collision.collider.parent(); // ← RigidBody | null
-
-                        if (platformBody) {
-                            const linVel = platformBody.linvel();
-                            movement.x += linVel.x;
-                            movement.y += linVel.y;
-                            movement.z += linVel.z;
-                        }
-
-                        break; // une seule plateforme suffit
-                    }
-                }
-            }
-
-            // Appliquer le mouvement corrigé
-            const correctedMovement = this.characterController.computedMovement();
-            const currentPosition = physics.body.translation();
-
-            physics.body.setNextKinematicTranslation({
-                x: currentPosition.x + correctedMovement.x,
-                y: currentPosition.y + correctedMovement.y,
-                z: currentPosition.z + correctedMovement.z,
-            });
-        }
-
-
-        // Appliquer le mouvement corrigé
-        const correctedMovement = this.characterController.computedMovement();
-        const currentPosition = physics.body.translation();
-
-        physics.body.setNextKinematicTranslation({
-            x: currentPosition.x + correctedMovement.x,
-            y: currentPosition.y + correctedMovement.y,
-            z: currentPosition.z + correctedMovement.z,
-        });
+    private calculateMovement(dt: number): Vector3 {
+        const inputDir = new Vector3(this.inputComponent.getDirection().x, 0, this.inputComponent.getDirection().z);
+        const rotation = new Quaternion().copy(this.physicsComponent.body.rotation());
+        inputDir.applyQuaternion(rotation).normalize().multiplyScalar(this.speed);
+        this.verticalSpeed -= GRAVITY * dt;
+        const movement = inputDir.setY(this.verticalSpeed).multiplyScalar(dt);
+        return movement;
     }
-
-
 
     public triggerJump(): void {
-        if (!this.isJumping) {
+        if (!this.isJumping && this.controller.computedGrounded()) {
             this.verticalSpeed = this.jumpForce;
             this.isJumping = true;
         }
     }
 
+    get characterController(): RAPIER.KinematicCharacterController {
+        return this.controller;
+    }
+
+    get grounded(): boolean {
+        return this.controller.computedGrounded();
+    }
 }

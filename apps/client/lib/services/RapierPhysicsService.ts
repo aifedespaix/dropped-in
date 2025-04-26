@@ -1,8 +1,8 @@
 import * as RAPIER from '@dimforge/rapier3d-compat';
 import { _Service } from './_Service';
-
+import { GRAVITY } from '~/game/constants';
 export class RapierPhysicsService extends _Service {
-    private gravity = new RAPIER.Vector3(0, -9.81, 0);
+    private gravity = new RAPIER.Vector3(0, GRAVITY, 0);
     private world!: RAPIER.World;
 
     override async init(): Promise<void> {

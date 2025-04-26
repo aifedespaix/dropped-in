@@ -10,7 +10,6 @@
             >
                 {{ button.label }}
             </OverlayMenuButton>
-            <button class="w-40 h-40 bg-red-500 rounded-full"></button>
         </div>
     </div>
 </template>

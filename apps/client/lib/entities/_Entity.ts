@@ -12,61 +12,62 @@ import * as THREE from 'three';
  */
 export abstract class _Entity {
     static idCounter = 0;
-    private id: number;
-    private components: Map<string, _Component> = new Map();
+    #components: Map<string, _Component> = new Map();
+
+
+    #id: number;
     protected serviceLocator: ServiceLocator;
 
-    abstract init(): Promise<void>;
-
     constructor(serviceLocator: ServiceLocator) {
-        this.id = _Entity.idCounter++;
+        this.#id = _Entity.idCounter++;
         this.serviceLocator = serviceLocator;
     }
 
+    abstract init(): Promise<void>;
     abstract get name(): string;
 
     getId(): number {
-        return this.id;
+        return this.#id;
     }
 
     addComponent<T extends _Component>(component: T): void {
         const name = component.constructor.name;
-        this.components.set(name, component);
+        this.#components.set(name, component);
         component.entity = this;
     }
 
     async initAllComponents(): Promise<void> {
-        for (const comp of this.components.values()) {
+        for (const comp of this.#components.values()) {
             await comp.init?.();
         }
     }
 
     startAllComponents(): void {
-        for (const comp of this.components.values()) {
+        for (const comp of this.#components.values()) {
             comp.start?.();
         }
     }
 
     removeComponent<T extends _Component>(componentClass: new (...args: any[]) => T): void {
         const name = componentClass.name;
-        const comp = this.components.get(name);
+        const comp = this.#components.get(name);
         if (comp && comp.destroy) comp.destroy(); // cleanup
-        this.components.delete(name);
+        this.#components.delete(name);
     }
 
     getComponent<T extends _Component>(componentClass: new (...args: any[]) => T): T {
         const name = componentClass.name;
-        const comp = this.components.get(name);
-        if (!comp) throw new Error(`Component ${name} not found on entity ${this.id}`);
+        const comp = this.#components.get(name);
+        if (!comp) throw new Error(`Component ${name} not found on entity ${this.#id}`);
         return comp as T;
     }
 
     hasComponent<T extends _Component>(componentClass: new (...args: any[]) => T): boolean {
-        return this.components.has(componentClass.name);
+        return this.#components.has(componentClass.name);
     }
 
     update(dt: number): void {
-        for (const component of this.components.values()) {
+        for (const component of this.#components.values()) {
             if (component.update) {
                 component.update(dt);
             }
@@ -78,7 +79,7 @@ export abstract class _Entity {
             return this.getComponent(componentClass);
         }
         if (warn) {
-            console.warn(`Component ${componentClass.name} not found on entity ${this.name} ${this.id}`);
+            console.warn(`Component ${componentClass.name} not found on entity ${this.name} ${this.#id}`);
         }
         return undefined;
     }
@@ -88,7 +89,7 @@ export abstract class _Entity {
     ): T[] {
         const results: T[] = [];
 
-        for (const component of this.components.values()) {
+        for (const component of this.#components.values()) {
             if (component instanceof type) {
                 results.push(component as T);
             }
@@ -98,7 +99,7 @@ export abstract class _Entity {
     }
 
     getComponents(): _Component[] {
-        return Array.from(this.components.values());
+        return Array.from(this.#components.values());
     }
 
     getRenderableObject(): THREE.Object3D | undefined {
@@ -108,7 +109,7 @@ export abstract class _Entity {
 
     getComponentsByAbstractClass<T extends _Component>(baseClass: new (...args: any[]) => T): T[] {
         const result: T[] = [];
-        for (const component of this.components.values()) {
+        for (const component of this.#components.values()) {
             if (component instanceof baseClass) {
                 result.push(component as T);
             }

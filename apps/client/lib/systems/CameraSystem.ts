@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { _System } from './_System';
 import { ServiceLocator } from '../services/ServiceLocator';
 import { InputService } from '../services/InputService';
-import type { PlayerEntity } from '../entities/Player.entity';
+import type { PlayerEntity } from '../entities/kinematicPositionBased/Player.entity';
 import { RapierPhysicsComponent } from '../components/physics/RapierPhysicsComponent';
 import { clamp } from '../utils/Math';
 type CameraMode = 'FPS' | 'TPS' | 'TopDown' | 'TopDownFree'

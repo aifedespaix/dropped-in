@@ -1,12 +1,12 @@
-import { _RenderComponent } from "../components/render/_RenderComponent";
-import { _Entity } from "./_Entity";
-import { PrimitiveRenderComponent, type PrimitiveRenderComponentOptions } from "../components/render/PrimitiveRenderComponent";
+import { _RenderComponent } from "../../components/render/_RenderComponent";
+import { _Entity } from "../_Entity";
+import { PrimitiveRenderComponent, type PrimitiveRenderComponentOptions } from "../../components/render/PrimitiveRenderComponent";
 import * as THREE from 'three';
-import { RapierPhysicsComponent, type RapierPhysicsComponentOptions } from "../components/physics/RapierPhysicsComponent";
-import { PhysicRotationComponent, type RotatorComponentOptions } from "../components/physics/PhysicRotationComponent";
-import { HitboxSquareComponent } from "../components/hitbox/HitBoxSquareComponent";
-import { HitboxHelperComponent } from "../components/helpers/HitboxHelperComponent";
-import { CollisionStateComponent } from "../components/CollisionStateComponent";
+import { RapierPhysicsComponent, type RapierPhysicsComponentOptions } from "../../components/physics/RapierPhysicsComponent";
+import { PhysicRotationComponent, type RotatorComponentOptions } from "../../components/physics/PhysicRotationComponent";
+import { HitboxSquareComponent } from "../../components/hitbox/HitBoxSquareComponent";
+import { HitboxHelperComponent } from "../../components/helpers/HitboxHelperComponent";
+import { CollisionStateComponent } from "../../components/CollisionStateComponent";
 export class PlatformEntity extends _Entity {
 
     async init(): Promise<void> {
@@ -24,7 +24,8 @@ export class PlatformEntity extends _Entity {
             position: { x: -30, y: -0.8, z: 40 },
             friction: 0,
             type: 'kinematicVelocity',
-            rotation: quaternion
+            rotation: quaternion,
+            isPlatform: true,
         }
         const rotationOptions: Partial<RotatorComponentOptions> = {
             speedY: 1,

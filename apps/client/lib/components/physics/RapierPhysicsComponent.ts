@@ -6,6 +6,10 @@ import { _RenderComponent } from '../render/_RenderComponent';
 import { Vector3, Quaternion, Euler } from 'three';
 
 type RapierPhysicsComponentType = 'dynamic' | 'static' | 'kinematicVelocity' | 'kinematicPosition';
+export type BodyUserData = {
+    isPlatform?: boolean;
+    [key: string]: any;
+};
 
 export type RapierPhysicsComponentOptions = {
     dynamic: boolean;
@@ -15,6 +19,7 @@ export type RapierPhysicsComponentOptions = {
     friction: number;
     type: RapierPhysicsComponentType;
     isCcdEnabled?: boolean; // Continuous Collision Detection
+    isPlatform?: boolean;
 };
 
 export class RapierPhysicsComponent extends _Component {
@@ -30,8 +35,9 @@ export class RapierPhysicsComponent extends _Component {
             rotation: { x: 0, y: 0, z: 0, w: 1 },
             size: { x: 1, y: 1, z: 1 },
             friction: 0.5,
-            type: 'dynamic',
+            type: 'kinematicPosition',
             isCcdEnabled: false,
+            isPlatform: false,
             ...options,
         };
     }
@@ -57,6 +63,10 @@ export class RapierPhysicsComponent extends _Component {
         const { x: rx, y: ry, z: rz, w: rw } = this._options.rotation;
         bodyDesc.setRotation({ x: rx, y: ry, z: rz, w: rw });
 
+        bodyDesc.userData = {
+            isPlatform: this._options.isPlatform,
+        }
+
         this.body = world.createRigidBody(bodyDesc);
         return Promise.resolve();
     }
@@ -79,12 +89,6 @@ export class RapierPhysicsComponent extends _Component {
 
         const world = this.serviceLocator.get('physics').getWorld();
         this.collider = world.createCollider(colliderDesc, this.body);
-    }
-
-
-    isGrounded(): boolean {
-        const vel = this.body.linvel();
-        return Math.abs(vel.y) < 0.1;
     }
 
     setVelocity(vel: { x: number; y: number; z: number }) {

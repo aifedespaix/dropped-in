@@ -9,10 +9,9 @@ export class JumpAction extends _Action {
     override start(entity: _Entity): void {
         this.entity = entity;
 
-        const physics = entity.getComponent(RapierPhysicsComponent);
-        if (!physics.isGrounded()) return;
-
         const movement = entity.getComponent(MovementControllerComponent);
+        if (!movement.grounded) return;
+
         movement.triggerJump();
 
         this.startedAt = performance.now();

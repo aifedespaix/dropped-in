@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { GameEngine } from '~/lib/core/GameEngine';
+import { GameEngine } from '~/game/core/GameEngine';
 
 export const useGameStore = defineStore('game', () => {
     const isInitialized = ref(false);
@@ -7,24 +7,31 @@ export const useGameStore = defineStore('game', () => {
 
     const isGameStarted = ref(false);
 
-    function initGameEngine(container: HTMLElement) {
+    async function initGameEngine(container: HTMLElement) {
         if (isInitialized.value) {
             return;
         }
 
         const engine = new GameEngine(container);
-        engine.init();
+        await engine.load();
         isInitialized.value = true;
         gameEngine.value = engine;
     }
 
     function play() {
-        gameEngine.value?.start();
+        if (!gameEngine.value) {
+            throw new Error('Game engine not initialized');
+        }
+        if (gameEngine.value.isInitialized) {
+            gameEngine.value.resume();
+        } else {
+            gameEngine.value.start();
+        }
         isGameStarted.value = true;
     }
 
     function stop() {
-        gameEngine.value?.stop();
+        gameEngine.value?.pause();
         isGameStarted.value = false;
     }
 

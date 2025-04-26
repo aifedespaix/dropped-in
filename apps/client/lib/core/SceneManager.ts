@@ -1,15 +1,17 @@
 import { _RenderComponent } from "../components/render/_RenderComponent";
 import type { _Entity } from "../entities/_Entity";
-import { CubeEntity } from "../entities/CubeEntity";
-import { FloorEntity } from "../entities/FloorEntity";
-import { PlatformEntity } from "../entities/PlatformEntity";
-import { PlayerEntity } from "../entities/Player.entity";
-import { PusherEntity } from "../entities/PusherEntity";
-import { RampEntity } from "../entities/RampEntity";
+import { CubeEntity } from "../entities/dynamic/CubeEntity";
+import { FloorEntity } from "../entities/fixed/FloorEntity";
+import { PlatformEntity } from "../entities/kinematicVelocityBased/PlatformEntity";
+import { PlayerEntity } from "../entities/kinematicPositionBased/Player.entity";
+import { PusherEntity } from "../entities/kinematicVelocityBased/PusherEntity";
+import { RampEntity } from "../entities/fixed/RampEntity";
 import type { ServiceLocator } from "../services/ServiceLocator";
 import type { _System } from "../systems/_System";
 import { CollisionSystem } from "../systems/CollisionSystem";
 import { CameraSystem } from "../systems/CameraSystem";
+import { ElevatorEntity } from "../entities/kinematicVelocityBased/Elevator.entity";
+import { PlatformAttachSystem } from "../systems/PlatformAttachSystem";
 
 export class SceneManager {
     private entities: _Entity[] = [];
@@ -27,6 +29,7 @@ export class SceneManager {
         const pusher = new PusherEntity(this.serviceLocator);
         const ramp = new RampEntity(this.serviceLocator);
         const platform = new PlatformEntity(this.serviceLocator);
+        const elevator = new ElevatorEntity(this.serviceLocator);
 
         const promises: Promise<void>[] = [];
         promises.push(this.addEntity(player));
@@ -35,6 +38,7 @@ export class SceneManager {
         promises.push(this.addEntity(pusher));
         promises.push(this.addEntity(ramp));
         promises.push(this.addEntity(platform));
+        promises.push(this.addEntity(elevator));
         await Promise.all(promises);
 
         await this.addSystems();
@@ -48,8 +52,8 @@ export class SceneManager {
         const collisionSystem = new CollisionSystem(this.serviceLocator, player, this.entities);
         await this.addSystem(collisionSystem);
 
-        // const platformFollowerSystem = new PlatformFollowerSystem(player, this.entities);
-        // await this.addSystem(platformFollowerSystem);
+        // const platformAttachSystem = new PlatformAttachSystem(this.serviceLocator, player, this.entities);
+        // await this.addSystem(platformAttachSystem);
 
         const cameraSystem = new CameraSystem(this.serviceLocator, player);
         await this.addSystem(cameraSystem);
