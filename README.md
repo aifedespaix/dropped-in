@@ -1,6 +1,8 @@
-# 🌟 Game Engine
+# 🌟 Dropped In
 
 > Un moteur de jeu 3D pour navigateur — modulaire, orienté objet, flexible et ultra-performant.
+
+![Bannière du projet](./images/sample-1.png)
 
 ---
 
