@@ -5,7 +5,6 @@ export enum ComponentType {
 
 export enum ComponentSource {
     Factory = "Factory",
-    Engine = "Engine",
     System = "System",
 }
 

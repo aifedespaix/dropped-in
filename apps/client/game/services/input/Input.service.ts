@@ -1,5 +1,5 @@
 import { _Service } from "../_Service";
-import type { InputAction } from "../../types/InputBinding";
+import type { InputAction } from "./InputBindings";
 import type { _Input } from "./sources/_Input";
 import { KeyboardInput } from "./sources/Keyboard.input";
 import { GamepadInput } from "./sources/Gamepad.input";
@@ -14,16 +14,44 @@ export class InputService extends _Service {
             new KeyboardInput(),
             new GamepadInput(),
             new MouseInput(),
-            // tu peux ajouter MouseInputSource ici aussi
         ];
+
     }
 
     update(): void {
         for (const source of this.#sources) source.update?.();
     }
 
+    getMouseMovement(): { x: number; y: number } {
+        const mouseSource = this.#sources.find(source => source instanceof MouseInput) as MouseInput | undefined;
+
+        if (!mouseSource) {
+            return { x: 0, y: 0 };
+        }
+
+        return mouseSource.getMovement();
+    }
+
+    getLookInput(): { x: number; y: number } {
+        let x = 0;
+        let y = 0;
+
+        for (const source of this.#sources) {
+            if (source.getLookInput) {
+                const move = source.getLookInput();
+                x += move.x;
+                y += move.y;
+            }
+        }
+
+        return { x, y };
+    }
+
+
+
     isActionActive(action: InputAction): boolean {
-        return this.#sources.some(source => source.isActionActive(action));
+        const isActive = this.#sources.some(source => source.isActionActive(action));
+        return isActive;
     }
 
     dispose(): void {

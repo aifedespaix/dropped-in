@@ -16,6 +16,8 @@
         "lerp",
         "linvel",
         "nuxt",
+        "phong",
+        "Phong",
         "renderable",
         "Renderable",
         "unocss",

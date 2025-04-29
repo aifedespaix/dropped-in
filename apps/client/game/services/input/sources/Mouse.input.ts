@@ -1,5 +1,5 @@
 import type { _Input } from "./_Input";
-import type { InputAction } from "~/game/types/InputBinding";
+import type { InputAction } from "../InputBindings";
 
 export enum MouseButton {
     Left = 0,
@@ -8,9 +8,8 @@ export enum MouseButton {
 }
 
 const MOUSE_MAPPING: Partial<Record<InputAction, number[]>> = {
-    jump: [MouseButton.Left],         // clic gauche pour sauter par exemple
-    toggleTorch: [MouseButton.Middle],  // clic molette pour allumer la torche
-    // tu peux ajouter d'autres actions
+    jump: [MouseButton.Left],
+    toggleTorch: [MouseButton.Middle],
 };
 
 export class MouseInput implements _Input {
@@ -37,18 +36,22 @@ export class MouseInput implements _Input {
         this.#justPressed.delete(e.button);
     };
 
-
     #onMouseMove = (e: MouseEvent) => {
-        this.#movementX += e.movementX;
-        this.#movementY += e.movementY;
+        if (document.pointerLockElement) { // on est sûr d'être en mode "capture souris"
+            this.#movementX += e.movementX;
+            this.#movementY += e.movementY;
+        }
     };
 
     getMovement(): { x: number, y: number } {
         const movement = { x: this.#movementX, y: this.#movementY };
-        // Reset après lecture
         this.#movementX = 0;
         this.#movementY = 0;
         return movement;
+    }
+
+    getLookInput(): { x: number, y: number } {
+        return this.getMovement();
     }
 
     update(): void {
@@ -57,7 +60,6 @@ export class MouseInput implements _Input {
 
     isActionActive(action: InputAction): boolean {
         const buttons = MOUSE_MAPPING[action] ?? [];
-        // Adapte ici selon ton InputBinding si certaines actions souris doivent être continues ou ponctuelles
         return buttons.some(button => this.#pressed.has(button));
     }
 

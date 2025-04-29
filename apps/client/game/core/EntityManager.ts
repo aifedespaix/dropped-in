@@ -1,16 +1,16 @@
-import { _Entity } from "../entities/_Entity";
+import { Entity } from "../entities/Entity";
 
 export class EntityManager {
-    #entities: Map<string, _Entity> = new Map();
+    #entities: Map<string, Entity> = new Map();
 
-    add(entity: _Entity): void {
+    add(entity: Entity): void {
         if (this.#entities.has(entity.id)) {
             throw new Error(`Une entité avec l'ID "${entity.id}" existe déjà.`);
         }
         this.#entities.set(entity.id, entity);
     }
 
-    getOrFail<T extends _Entity = _Entity>(id: string): T {
+    getOrFail<T extends Entity = Entity>(id: string): T {
         const entity = this.#get<T>(id);
         if (!entity) {
             throw new Error(`Entité avec l'ID "${id}" introuvable.`);
@@ -18,7 +18,7 @@ export class EntityManager {
         return entity;
     }
 
-    tryGet<T extends _Entity = _Entity>(id: string, silent = false): T | undefined {
+    tryGet<T extends Entity = Entity>(id: string, silent = false): T | undefined {
         const entity = this.#get<T>(id);
         if (!entity && !silent) {
             console.warn(`[EntityManager] Entité introuvable : ${id}`);
@@ -34,15 +34,15 @@ export class EntityManager {
         return this.#entities.has(id);
     }
 
-    getAll(): IterableIterator<_Entity> {
-        return this.#entities.values();
+    getAll(): Entity[] {
+        return Array.from(this.#entities.values());
     }
 
     clear(): void {
         this.#entities.clear();
     }
 
-    #get<T extends _Entity = _Entity>(id: string): T | undefined {
+    #get<T extends Entity = Entity>(id: string): T | undefined {
         return this.#entities.get(id) as T | undefined;
     }
 

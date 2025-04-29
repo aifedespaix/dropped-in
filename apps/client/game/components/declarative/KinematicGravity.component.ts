@@ -6,7 +6,7 @@ export class KinematicGravityComponent extends _Component {
     readonly gravity: number;
     readonly jumpForce: number;
 
-    constructor(gravity = -9.81, jumpForce = 6) {
+    constructor(gravity = -9.81, jumpForce = 4.5) {
         super(ComponentType.Declarative);
         this.gravity = gravity;
         this.jumpForce = jumpForce;

@@ -1,4 +1,4 @@
-import { DEFAULT_INPUT_BINDINGS, type InputAction, type InputBinding } from "~/game/types/InputBinding";
+import { DEFAULT_INPUT_BINDINGS, type InputAction, type InputBinding } from "../InputBindings";
 import type { _Input } from "./_Input";
 
 export class KeyboardInput implements _Input {

@@ -1,15 +1,16 @@
 import { _Component, ComponentType } from "../_Component";
-import type { ISize } from "~/game/types/I3D";
 
-export class HitboxCubeComponent extends _Component {
-    readonly size: ISize;
+export type HitboxType = 'box' | 'sphere' | 'capsule' | 'convexHull'; // (d'autres plus tard si besoin)
+
+export class HitboxComponent extends _Component {
     readonly restitution: number;
     readonly friction: number;
+    readonly forcedType?: HitboxType;
 
-    constructor(size: ISize, restitution: number, friction: number) {
+    constructor(restitution: number, friction: number, forcedType?: HitboxType) {
         super(ComponentType.Declarative);
-        this.size = size;
         this.restitution = restitution;
         this.friction = friction;
+        this.forcedType = forcedType;
     }
 }

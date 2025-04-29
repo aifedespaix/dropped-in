@@ -1,4 +1,4 @@
-import type { InputService } from "../services/Input.service";
+import type { InputService } from "../services/input/Input.service";
 import type { _Service } from "../services/_Service";
 import type { ResourceService } from "../services/Resource.service";
 
@@ -8,7 +8,6 @@ export type ServiceMap = {
 };
 
 export type ServiceKey = keyof ServiceMap;
-
 
 export class ServiceLocator {
     readonly #services = new Map<ServiceKey, _Service>();

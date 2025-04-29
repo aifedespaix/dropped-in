@@ -1,4 +1,4 @@
-import { _Entity } from "../entities/_Entity";
+import { Entity } from "../entities/Entity";
 import { _Component, ComponentSource } from "../components/_Component";
 
 export type FactoryMethod<T> = Record<string, () => T>;

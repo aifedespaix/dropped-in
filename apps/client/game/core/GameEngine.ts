@@ -1,25 +1,21 @@
-import { GraphicEngine } from "../engines/graphic/Graphic.engine";
-import { PhysicEngine } from "../engines/physic/Physic.engine";
-import { RenderLoop } from "./RenderLoop";
-import { EntityManager } from "./EntityManager";
-import { NetworkEngine } from "../engines/network/Network.engine";
-import { LocalEngine } from "../engines/local/Local.engine";
-import type { _Engine } from "../engines/_Engine";
 import { EntityFactory } from "../factories/Entity.factory";
-import type { _Entity } from "../entities/_Entity";
-import { InputSystem } from "../systems/Input.system";
+import { EntityManager } from "./EntityManager";
 import { ServiceLocator } from "./ServiceLocator";
+import { PhysicsSystem } from "../systems/Physic.system";
+import { InputSystem } from "../systems/Input.system";
+import { RenderLoop } from "./RenderLoop";
+import type { _System } from "../systems/_System";
 import { InputService } from "../services/input/Input.service";
 import { ResourceService } from "../services/Resource.service";
+import { GraphicsSystem } from "../systems/Graphic.system";
+import type { Entity } from "../entities/Entity";
 
 export class GameEngine {
-    readonly #engines = new Set<_Engine>();
+    readonly #systems = new Set<_System>();
 
     readonly #entityFactory = new EntityFactory();
     readonly #entityManager = new EntityManager();
     readonly #serviceLocator = new ServiceLocator();
-
-    readonly #inputSystem = new InputSystem(this.#serviceLocator);
 
     readonly #gameLoop: RenderLoop;
 
@@ -31,31 +27,25 @@ export class GameEngine {
         this.#serviceLocator.register('input', new InputService());
         this.#serviceLocator.register('resource', new ResourceService());
 
-        // Attention, l'ordre des moteurs est important
-        this.#engines.add(new LocalEngine(this.#serviceLocator));
-        this.#engines.add(new PhysicEngine(this.#serviceLocator));
-        this.#engines.add(new NetworkEngine(this.#serviceLocator))
-        this.#engines.add(new GraphicEngine(this.#serviceLocator, container));
-
+        this.#systems.add(new InputSystem(this.#serviceLocator));
+        this.#systems.add(new PhysicsSystem(this.#serviceLocator));
+        this.#systems.add(new GraphicsSystem(this.#serviceLocator, container));
     }
 
+    async load(): Promise<void> {
+        await Promise.all(Array.from(this.#systems).map(system => system.load?.() ?? Promise.resolve()));
+        this.#generateEntities();
+        this.#loadEntitiesIntoSystems();
 
-    load(): Promise<void[]> {
-        return Promise.all(
-            Array.from(this.#engines).map(engine => engine.load()),
-        );
+        for (const system of this.#systems) {
+            system.start?.();
+        }
+
+        // Effectuer un premier rendu sans démarrer la boucle
+        this.#update(0);
     }
 
     start(): void {
-        this.#generateEntities();
-        this.#addEntitiesToEngines();
-
-        this.#inputSystem.loadEntities(this.#entityManager.getAll());
-        for (const engine of this.#engines) {
-            engine.start();
-        }
-
-
         this.#gameLoop.start();
         this.#isInitialized = true;
     }
@@ -76,9 +66,23 @@ export class GameEngine {
         this.#generateEntity(this.#entityFactory.createCube.bind(this.#entityFactory));
         this.#generateEntity(this.#entityFactory.createFloor.bind(this.#entityFactory));
         this.#generateEntity(this.#entityFactory.createPlayer.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createSphere.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createSphere.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createSphere.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createSphere.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createSphere.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createSphere.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createSphere.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createSphere.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createSphere.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createSphere.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createSphere.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createMovingPlatform.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createRotatingPlatform.bind(this.#entityFactory));
+        this.#generateEntity(this.#entityFactory.createRamp.bind(this.#entityFactory));
     }
 
-    #generateEntity<T extends (...args: any[]) => _Entity>(
+    #generateEntity<T extends (...args: any[]) => Entity>(
         entityCreator: T,
         ...args: Parameters<T>
     ): void {
@@ -86,20 +90,16 @@ export class GameEngine {
         this.#entityManager.add(entity);
     }
 
-    #addEntitiesToEngines(): void {
+    #loadEntitiesIntoSystems(): void {
         const allEntities = this.#entityManager.getAll();
-
-        for (const entity of allEntities) {
-            for (const engine of this.#engines) {
-                engine.addEntity(entity);
-            }
+        for (const system of this.#systems) {
+            system.loadEntities(allEntities);
         }
     }
 
     #update(delta: number): void {
-        this.#inputSystem.update(delta);
-        for (const engine of this.#engines) {
-            engine.update(delta);
+        for (const system of this.#systems) {
+            system.update(delta);
         }
     }
 }

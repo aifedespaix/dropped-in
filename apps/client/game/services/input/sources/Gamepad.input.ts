@@ -1,6 +1,6 @@
 import type { _Input } from "./_Input";
-import type { InputAction, InputBinding } from "~/game/types/InputBinding";
-import { DEFAULT_INPUT_BINDINGS } from "~/game/types/InputBinding";
+import type { InputAction } from "../InputBindings";
+import { DEFAULT_INPUT_BINDINGS } from "../InputBindings";
 
 export enum GamepadButton {
     DPadUp = 12,
@@ -45,5 +45,19 @@ export class GamepadInput implements _Input {
         return continuous
             ? buttonIndices.some(index => this.#pressed.has(index))
             : buttonIndices.some(index => this.#justPressed.has(index));
+    }
+
+    /** récupère l'input de visée depuis le stick droit */
+    getLookInput(): { x: number; y: number } {
+        const gamepads = navigator.getGamepads?.();
+        const pad = gamepads?.[0];
+        if (!pad) return { x: 0, y: 0 };
+
+        const x = pad.axes[2] ?? 0; // Stick droit horizontal
+        const y = pad.axes[3] ?? 0; // Stick droit vertical
+
+        // Attention : parfois selon les manettes, y est inversé (on pourra inverser si besoin)
+
+        return { x, y };
     }
 }
