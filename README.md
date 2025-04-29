@@ -1,6 +1,6 @@
 # 🌟 Dropped In
 
-> Un moteur de jeu 3D pour navigateur — modulaire, orienté objet, flexible et ultra-performant.
+> Un moteur de jeu 3D pour navigateur — modulaire, orienté objet et flexible.
 
 ![Bannière du projet](./images/sample-1.png)
 
